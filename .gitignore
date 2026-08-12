@@ -1,0 +1,10 @@
+.DS_Store
+.env
+.env_dma/
+.venv/
+__pycache__/
+*.pyc
+
+build/
+*.vcd
+*.fst

@@ -1,0 +1,8 @@
+SuperTILE,AXIL_S_IO,,,,,,,,,,,,,,,,,
+AXIL_S_IO_3,,,,,,,,,,,,,,,,,,
+AXIL_S_IO_2,,,,,,,,,,,,,,,,,,
+AXIL_S_IO_1,,,,,,,,,,,,,,,,,,
+AXIL_S_IO_0,,,,,,,,,,,,,,,,,,
+BEL,./AXIL_S_BEL.v,AXIL_S_,ADD_AS_CUSTOM_PRIM,
+MATRIX,./AXIL_S_IO_switch_matrix.list,,,,,,,,,,,,,,,,,
+EndSuperTILE,,,,,,,,,,,,,,,,,,
