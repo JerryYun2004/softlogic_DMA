@@ -1,0 +1,94 @@
+PROJECT_ROOT       ?= ..
+USER_DESIGN_DIR    ?= $(PROJECT_ROOT)/user_design
+BUILD_DIR          ?= build/combined_dma_npu
+
+TESTBENCH          ?= tb_npu_yolo_dma_integrated
+TESTBENCH_RTL      ?= $(TESTBENCH).sv
+
+DMA_AGU_RTL        ?= $(USER_DESIGN_DIR)/conv3x3_hwc_channel_dma_agu.sv
+DMA_WRAPPER_RTL    ?= $(USER_DESIGN_DIR)/dma_a.v
+
+# These defaults match the NPU hierarchy supplied with the YOLO testbench.
+# Override NPU_RTL on the make command line if the files live elsewhere.
+NPU_RTL            ?= \
+	$(USER_DESIGN_DIR)/pe.sv \
+	$(USER_DESIGN_DIR)/systolic_array.sv \
+	$(USER_DESIGN_DIR)/npu_crossbar.sv \
+	$(USER_DESIGN_DIR)/npu_top.sv \
+	$(USER_DESIGN_DIR)/sram_bank.sv \
+	$(USER_DESIGN_DIR)/npu_sram_wrapper.sv
+
+IMAGE_MEM          ?= yolo_image_3x3.mem
+WEIGHTS_MEM        ?= yolo_weights_3x3.mem
+GOLDEN_MEM         ?= golden_conv3.mem
+
+IVERILOG           ?= iverilog
+VVP                ?= vvp
+IVERILOG_FLAGS     ?= -g2012 -Wall
+VVP_ARGS           ?=
+
+SIM_VVP            := $(BUILD_DIR)/$(TESTBENCH).vvp
+VCD_FILE           := $(BUILD_DIR)/$(TESTBENCH).vcd
+RTL_SOURCES        := $(DMA_AGU_RTL) $(DMA_WRAPPER_RTL) $(NPU_RTL) $(TESTBENCH_RTL)
+
+.PHONY: all sim compile run wave check_files mkdir_build clean help
+
+all: sim
+
+# Compile and execute the combined YOLO test:
+#   - activation halos are loaded by dma_a + the RTL AGU;
+#   - weights are shifted by the testbench;
+#   - all NPU outputs are compared with golden_conv3.mem.
+sim: run
+
+compile: check_files mkdir_build
+	$(IVERILOG) $(IVERILOG_FLAGS) -s $(TESTBENCH) \
+		-o "$(SIM_VVP)" \
+		$(RTL_SOURCES)
+
+run: compile
+	@test -f "$(SIM_VVP)" || { \
+		echo "Missing simulation executable: $(SIM_VVP)"; \
+		echo "Run 'make -f Makefile.dma_npu_combined compile' first."; \
+		exit 1; \
+	}
+	$(VVP) "$(SIM_VVP)" \
+		"+IMAGE_MEM=$(abspath $(IMAGE_MEM))" \
+		"+WEIGHTS_MEM=$(abspath $(WEIGHTS_MEM))" \
+		"+GOLDEN_MEM=$(abspath $(GOLDEN_MEM))" $(VVP_ARGS)
+
+# Generate a waveform as well as running the regression.
+wave: compile
+	$(VVP) "$(SIM_VVP)" \
+		"+IMAGE_MEM=$(abspath $(IMAGE_MEM))" \
+		"+WEIGHTS_MEM=$(abspath $(WEIGHTS_MEM))" \
+		"+GOLDEN_MEM=$(abspath $(GOLDEN_MEM))" \
+		"+VCD=$(abspath $(VCD_FILE))" $(VVP_ARGS)
+	@echo "Waveform: $(VCD_FILE)"
+
+check_files:
+	@for file in $(RTL_SOURCES); do \
+		test -f "$$file" || { \
+			echo "Missing RTL source: $$file"; \
+			echo "If your NPU files use different paths, override NPU_RTL='file1.sv file2.sv ...'"; \
+			exit 1; \
+		}; \
+	done
+	@test -f "$(IMAGE_MEM)" || { echo "Missing image file: $(IMAGE_MEM)"; exit 1; }
+	@test -f "$(WEIGHTS_MEM)" || { echo "Missing weights file: $(WEIGHTS_MEM)"; exit 1; }
+	@test -f "$(GOLDEN_MEM)" || { echo "Missing golden file: $(GOLDEN_MEM)"; exit 1; }
+
+mkdir_build:
+	mkdir -p "$(BUILD_DIR)"
+
+clean:
+	@test -n "$(BUILD_DIR)" && test "$(BUILD_DIR)" != "/" && test "$(BUILD_DIR)" != "."
+	rm -rf -- "$(BUILD_DIR)"
+
+help:
+	@echo "make -f Makefile.dma_npu_combined sim"
+	@echo "    Run the combined RTL-DMA activation + TB-weight YOLO test."
+	@echo "make -f Makefile.dma_npu_combined wave"
+	@echo "    Run the same test and write a VCD waveform."
+	@echo "make -f Makefile.dma_npu_combined clean"
+	@echo "    Remove only $(BUILD_DIR)."
