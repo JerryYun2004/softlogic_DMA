@@ -1,5 +1,5 @@
 {
-  "creator": "Yosys 0.63+161 (git sha1 5fd39ff3e, clang++ 18.1.8 -fPIC -O3)",
+  "creator": "Yosys 0.67+post (git sha1 b8e7da6f40ae8f552c116bf6c359b07c6533e159, Release, AppleClang clang++ 17.0.0.17000604)",
   "modules": {
     "Config_access": {
       "attributes": {
@@ -11,7 +11,7 @@
         "FABulous": 1,
         "dynports": 1,
         "top": 1,
-        "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/W_IO/Config_access.v:10.1-22.10"
+        "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/W_IO/Config_access.v:10.1-22.10"
       },
       "parameter_default_values": {
         "NoConfigBits": 4
@@ -35,7 +35,7 @@
           "attributes": {
             "EXTERNAL": 1,
             "FABulous": 1,
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/W_IO/Config_access.v:14.47-14.52"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/W_IO/Config_access.v:14.47-14.52"
           }
         },
         "ConfigBits": {
@@ -44,7 +44,7 @@
           "attributes": {
             "FABulous": 1,
             "GLOBAL": 1,
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/W_IO/Config_access.v:16.57-16.67"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/W_IO/Config_access.v:16.57-16.67"
           }
         }
       }

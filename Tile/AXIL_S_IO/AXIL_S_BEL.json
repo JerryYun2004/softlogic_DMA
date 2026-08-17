@@ -1,10 +1,10 @@
 {
-  "creator": "Yosys 0.63+161 (git sha1 5fd39ff3e, clang++ 18.1.8 -fPIC -O3)",
+  "creator": "Yosys 0.67+post (git sha1 b8e7da6f40ae8f552c116bf6c359b07c6533e159, Release, AppleClang clang++ 17.0.0.17000604)",
   "modules": {
     "AXIL_S_BEL": {
       "attributes": {
         "top": 1,
-        "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:3.1-75.10"
+        "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:3.1-75.10"
       },
       "ports": {
         "SOC_AWADDR": {
@@ -151,119 +151,119 @@
           "hide_name": 0,
           "bits": [ 51, 52, 53, 54, 55, 56, 57, 58, 59, 60 ],
           "attributes": {
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:40.38-40.48"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:40.38-40.48"
           }
         },
         "FAB_ARREADY": {
           "hide_name": 0,
           "bits": [ 68 ],
           "attributes": {
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:30.38-30.49"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:30.38-30.49"
           }
         },
         "FAB_ARVALID": {
           "hide_name": 0,
           "bits": [ 61 ],
           "attributes": {
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:41.38-41.49"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:41.38-41.49"
           }
         },
         "FAB_AWADDR": {
           "hide_name": 0,
           "bits": [ 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 ],
           "attributes": {
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:34.38-34.48"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:34.38-34.48"
           }
         },
         "FAB_AWREADY": {
           "hide_name": 0,
           "bits": [ 63 ],
           "attributes": {
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:26.38-26.49"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:26.38-26.49"
           }
         },
         "FAB_AWVALID": {
           "hide_name": 0,
           "bits": [ 12 ],
           "attributes": {
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:35.38-35.49"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:35.38-35.49"
           }
         },
         "FAB_BREADY": {
           "hide_name": 0,
           "bits": [ 50 ],
           "attributes": {
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:39.38-39.48"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:39.38-39.48"
           }
         },
         "FAB_BRESP": {
           "hide_name": 0,
           "bits": [ 65, 66 ],
           "attributes": {
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:28.38-28.47"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:28.38-28.47"
           }
         },
         "FAB_BVALID": {
           "hide_name": 0,
           "bits": [ 67 ],
           "attributes": {
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:29.38-29.48"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:29.38-29.48"
           }
         },
         "FAB_RDATA": {
           "hide_name": 0,
           "bits": [ 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100 ],
           "attributes": {
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:31.38-31.47"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:31.38-31.47"
           }
         },
         "FAB_RREADY": {
           "hide_name": 0,
           "bits": [ 62 ],
           "attributes": {
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:42.38-42.48"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:42.38-42.48"
           }
         },
         "FAB_RRESP": {
           "hide_name": 0,
           "bits": [ 101, 102 ],
           "attributes": {
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:32.38-32.47"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:32.38-32.47"
           }
         },
         "FAB_RVALID": {
           "hide_name": 0,
           "bits": [ 103 ],
           "attributes": {
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:33.38-33.48"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:33.38-33.48"
           }
         },
         "FAB_WDATA": {
           "hide_name": 0,
           "bits": [ 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44 ],
           "attributes": {
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:36.38-36.47"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:36.38-36.47"
           }
         },
         "FAB_WREADY": {
           "hide_name": 0,
           "bits": [ 64 ],
           "attributes": {
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:27.38-27.48"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:27.38-27.48"
           }
         },
         "FAB_WSTRB": {
           "hide_name": 0,
           "bits": [ 45, 46, 47, 48 ],
           "attributes": {
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:37.38-37.47"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:37.38-37.47"
           }
         },
         "FAB_WVALID": {
           "hide_name": 0,
           "bits": [ 49 ],
           "attributes": {
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:38.38-38.48"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:38.38-38.48"
           }
         },
         "SOC_ARADDR": {
@@ -272,7 +272,7 @@
           "attributes": {
             "EXTERNAL": 1,
             "FABulous": 1,
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:14.63-14.73"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:14.63-14.73"
           }
         },
         "SOC_ARREADY": {
@@ -281,7 +281,7 @@
           "attributes": {
             "EXTERNAL": 1,
             "FABulous": 1,
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:21.63-21.74"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:21.63-21.74"
           }
         },
         "SOC_ARVALID": {
@@ -290,7 +290,7 @@
           "attributes": {
             "EXTERNAL": 1,
             "FABulous": 1,
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:15.63-15.74"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:15.63-15.74"
           }
         },
         "SOC_AWADDR": {
@@ -299,7 +299,7 @@
           "attributes": {
             "EXTERNAL": 1,
             "FABulous": 1,
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:8.63-8.73"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:8.63-8.73"
           }
         },
         "SOC_AWREADY": {
@@ -308,7 +308,7 @@
           "attributes": {
             "EXTERNAL": 1,
             "FABulous": 1,
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:17.63-17.74"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:17.63-17.74"
           }
         },
         "SOC_AWVALID": {
@@ -317,7 +317,7 @@
           "attributes": {
             "EXTERNAL": 1,
             "FABulous": 1,
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:9.63-9.74"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:9.63-9.74"
           }
         },
         "SOC_BREADY": {
@@ -326,7 +326,7 @@
           "attributes": {
             "EXTERNAL": 1,
             "FABulous": 1,
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:13.63-13.73"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:13.63-13.73"
           }
         },
         "SOC_BRESP": {
@@ -335,7 +335,7 @@
           "attributes": {
             "EXTERNAL": 1,
             "FABulous": 1,
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:19.63-19.72"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:19.63-19.72"
           }
         },
         "SOC_BVALID": {
@@ -344,7 +344,7 @@
           "attributes": {
             "EXTERNAL": 1,
             "FABulous": 1,
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:20.63-20.73"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:20.63-20.73"
           }
         },
         "SOC_RDATA": {
@@ -353,7 +353,7 @@
           "attributes": {
             "EXTERNAL": 1,
             "FABulous": 1,
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:22.63-22.72"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:22.63-22.72"
           }
         },
         "SOC_RREADY": {
@@ -362,7 +362,7 @@
           "attributes": {
             "EXTERNAL": 1,
             "FABulous": 1,
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:16.63-16.73"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:16.63-16.73"
           }
         },
         "SOC_RRESP": {
@@ -371,7 +371,7 @@
           "attributes": {
             "EXTERNAL": 1,
             "FABulous": 1,
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:23.63-23.72"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:23.63-23.72"
           }
         },
         "SOC_RVALID": {
@@ -380,7 +380,7 @@
           "attributes": {
             "EXTERNAL": 1,
             "FABulous": 1,
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:24.63-24.73"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:24.63-24.73"
           }
         },
         "SOC_WDATA": {
@@ -389,7 +389,7 @@
           "attributes": {
             "EXTERNAL": 1,
             "FABulous": 1,
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:10.63-10.72"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:10.63-10.72"
           }
         },
         "SOC_WREADY": {
@@ -398,7 +398,7 @@
           "attributes": {
             "EXTERNAL": 1,
             "FABulous": 1,
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:18.63-18.73"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:18.63-18.73"
           }
         },
         "SOC_WSTRB": {
@@ -407,7 +407,7 @@
           "attributes": {
             "EXTERNAL": 1,
             "FABulous": 1,
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:11.63-11.72"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:11.63-11.72"
           }
         },
         "SOC_WVALID": {
@@ -416,7 +416,7 @@
           "attributes": {
             "EXTERNAL": 1,
             "FABulous": 1,
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:12.63-12.73"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v:12.63-12.73"
           }
         }
       }

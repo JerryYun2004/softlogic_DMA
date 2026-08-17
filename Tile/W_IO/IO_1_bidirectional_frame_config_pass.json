@@ -1,10 +1,10 @@
 {
-  "creator": "Yosys 0.63+161 (git sha1 5fd39ff3e, clang++ 18.1.8 -fPIC -O3)",
+  "creator": "Yosys 0.67+post (git sha1 b8e7da6f40ae8f552c116bf6c359b07c6533e159, Release, AppleClang clang++ 17.0.0.17000604)",
   "modules": {
     "IO_1_bidirectional_frame_config_pass": {
       "attributes": {
         "top": 1,
-        "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/W_IO/IO_1_bidirectional_frame_config_pass.v:18.1-49.10"
+        "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/W_IO/IO_1_bidirectional_frame_config_pass.v:18.1-49.10"
       },
       "ports": {
         "I": {
@@ -41,7 +41,7 @@
         }
       },
       "cells": {
-        "$not$/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/W_IO/IO_1_bidirectional_frame_config_pass.v:46$2": {
+        "$not$/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/W_IO/IO_1_bidirectional_frame_config_pass.v:46$2": {
           "hide_name": 1,
           "type": "$not",
           "parameters": {
@@ -50,7 +50,7 @@
             "Y_WIDTH": 1
           },
           "attributes": {
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/W_IO/IO_1_bidirectional_frame_config_pass.v:46.20-46.22"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/W_IO/IO_1_bidirectional_frame_config_pass.v:46.20-46.22"
           },
           "port_directions": {
             "A": "input",
@@ -69,7 +69,7 @@
             "WIDTH": 1
           },
           "attributes": {
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/W_IO/IO_1_bidirectional_frame_config_pass.v:41.5-43.8"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/W_IO/IO_1_bidirectional_frame_config_pass.v:41.5-43.8"
           },
           "port_directions": {
             "CLK": "input",
@@ -88,21 +88,21 @@
           "hide_name": 1,
           "bits": [ 4 ],
           "attributes": {
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/W_IO/IO_1_bidirectional_frame_config_pass.v:41.5-43.8"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/W_IO/IO_1_bidirectional_frame_config_pass.v:41.5-43.8"
           }
         },
-        "$not$/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/W_IO/IO_1_bidirectional_frame_config_pass.v:46$2_Y": {
+        "$not$/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/W_IO/IO_1_bidirectional_frame_config_pass.v:46$2_Y": {
           "hide_name": 1,
           "bits": [ 6 ],
           "attributes": {
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/W_IO/IO_1_bidirectional_frame_config_pass.v:46.20-46.22"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/W_IO/IO_1_bidirectional_frame_config_pass.v:46.20-46.22"
           }
         },
         "I": {
           "hide_name": 0,
           "bits": [ 2 ],
           "attributes": {
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/W_IO/IO_1_bidirectional_frame_config_pass.v:19.11-19.12"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/W_IO/IO_1_bidirectional_frame_config_pass.v:19.11-19.12"
           }
         },
         "I_top": {
@@ -111,14 +111,14 @@
           "attributes": {
             "EXTERNAL": 1,
             "FABulous": 1,
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/W_IO/IO_1_bidirectional_frame_config_pass.v:25.37-25.42"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/W_IO/IO_1_bidirectional_frame_config_pass.v:25.37-25.42"
           }
         },
         "O": {
           "hide_name": 0,
           "bits": [ 4 ],
           "attributes": {
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/W_IO/IO_1_bidirectional_frame_config_pass.v:21.12-21.13"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/W_IO/IO_1_bidirectional_frame_config_pass.v:21.12-21.13"
           }
         },
         "O_top": {
@@ -127,21 +127,21 @@
           "attributes": {
             "EXTERNAL": 1,
             "FABulous": 1,
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/W_IO/IO_1_bidirectional_frame_config_pass.v:27.36-27.41"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/W_IO/IO_1_bidirectional_frame_config_pass.v:27.36-27.41"
           }
         },
         "Q": {
           "hide_name": 0,
           "bits": [ 5 ],
           "attributes": {
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/W_IO/IO_1_bidirectional_frame_config_pass.v:22.16-22.17"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/W_IO/IO_1_bidirectional_frame_config_pass.v:22.16-22.17"
           }
         },
         "T": {
           "hide_name": 0,
           "bits": [ 3 ],
           "attributes": {
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/W_IO/IO_1_bidirectional_frame_config_pass.v:20.11-20.12"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/W_IO/IO_1_bidirectional_frame_config_pass.v:20.11-20.12"
           }
         },
         "T_top": {
@@ -150,7 +150,7 @@
           "attributes": {
             "EXTERNAL": 1,
             "FABulous": 1,
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/W_IO/IO_1_bidirectional_frame_config_pass.v:26.37-26.42"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/W_IO/IO_1_bidirectional_frame_config_pass.v:26.37-26.42"
           }
         },
         "UserCLK": {
@@ -160,7 +160,7 @@
             "EXTERNAL": 1,
             "FABulous": 1,
             "SHARED_PORT": 1,
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/W_IO/IO_1_bidirectional_frame_config_pass.v:31.49-31.56"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/W_IO/IO_1_bidirectional_frame_config_pass.v:31.49-31.56"
           }
         }
       }

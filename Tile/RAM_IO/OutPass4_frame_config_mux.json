@@ -1,5 +1,5 @@
 {
-  "creator": "Yosys 0.63+161 (git sha1 5fd39ff3e, clang++ 18.1.8 -fPIC -O3)",
+  "creator": "Yosys 0.67+post (git sha1 b8e7da6f40ae8f552c116bf6c359b07c6533e159, Release, AppleClang clang++ 17.0.0.17000604)",
   "modules": {
     "OutPass4_frame_config_mux": {
       "attributes": {
@@ -11,7 +11,7 @@
         "FABulous": 1,
         "dynports": 1,
         "top": 1,
-        "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/RAM_IO/OutPass4_frame_config_mux.v:25.1-78.10"
+        "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/RAM_IO/OutPass4_frame_config_mux.v:25.1-78.10"
       },
       "parameter_default_values": {
         "NoConfigBits": 4
@@ -43,7 +43,7 @@
             "WIDTH": 4
           },
           "attributes": {
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/RAM_IO/OutPass4_frame_config_mux.v:46.5-48.8"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/RAM_IO/OutPass4_frame_config_mux.v:46.5-48.8"
           },
           "port_directions": {
             "CLK": "input",
@@ -63,7 +63,7 @@
           },
           "attributes": {
             "module_not_derived": 1,
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/RAM_IO/OutPass4_frame_config_mux.v:50.15-55.6"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/RAM_IO/OutPass4_frame_config_mux.v:50.15-55.6"
           },
           "connections": {
             "A0": [ 2 ],
@@ -79,7 +79,7 @@
           },
           "attributes": {
             "module_not_derived": 1,
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/RAM_IO/OutPass4_frame_config_mux.v:57.15-62.6"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/RAM_IO/OutPass4_frame_config_mux.v:57.15-62.6"
           },
           "connections": {
             "A0": [ 3 ],
@@ -95,7 +95,7 @@
           },
           "attributes": {
             "module_not_derived": 1,
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/RAM_IO/OutPass4_frame_config_mux.v:64.15-69.6"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/RAM_IO/OutPass4_frame_config_mux.v:64.15-69.6"
           },
           "connections": {
             "A0": [ 4 ],
@@ -111,7 +111,7 @@
           },
           "attributes": {
             "module_not_derived": 1,
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/RAM_IO/OutPass4_frame_config_mux.v:71.15-76.6"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/RAM_IO/OutPass4_frame_config_mux.v:71.15-76.6"
           },
           "connections": {
             "A0": [ 5 ],
@@ -126,7 +126,7 @@
           "hide_name": 1,
           "bits": [ 2, 3, 4, 5 ],
           "attributes": {
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/RAM_IO/OutPass4_frame_config_mux.v:46.5-48.8"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/RAM_IO/OutPass4_frame_config_mux.v:46.5-48.8"
           }
         },
         "ConfigBits": {
@@ -135,14 +135,14 @@
           "attributes": {
             "FABulous": 1,
             "GLOBAL": 1,
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/RAM_IO/OutPass4_frame_config_mux.v:36.53-36.63"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/RAM_IO/OutPass4_frame_config_mux.v:36.53-36.63"
           }
         },
         "I": {
           "hide_name": 0,
           "bits": [ 2, 3, 4, 5 ],
           "attributes": {
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/RAM_IO/OutPass4_frame_config_mux.v:29.17-29.18"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/RAM_IO/OutPass4_frame_config_mux.v:29.17-29.18"
           }
         },
         "O": {
@@ -151,14 +151,14 @@
           "attributes": {
             "EXTERNAL": 1,
             "FABulous": 1,
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/RAM_IO/OutPass4_frame_config_mux.v:30.43-30.44"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/RAM_IO/OutPass4_frame_config_mux.v:30.43-30.44"
           }
         },
         "Q": {
           "hide_name": 0,
           "bits": [ 15, 16, 17, 18 ],
           "attributes": {
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/RAM_IO/OutPass4_frame_config_mux.v:44.15-44.16"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/RAM_IO/OutPass4_frame_config_mux.v:44.15-44.16"
           }
         },
         "UserCLK": {
@@ -168,7 +168,7 @@
             "EXTERNAL": 1,
             "FABulous": 1,
             "SHARED_PORT": 1,
-            "src": "/mnt/c/Users/Niels/Documents/nct/fabulous/FABulous/FABulous_demo_AXI_IO-main/Tile/RAM_IO/OutPass4_frame_config_mux.v:34.11-34.18"
+            "src": "/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/RAM_IO/OutPass4_frame_config_mux.v:34.11-34.18"
           }
         }
       }

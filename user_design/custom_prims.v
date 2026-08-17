@@ -178,3 +178,11 @@ module AXI_M_BEL (
     parameter TIE_OFF_ARSIZE = 0;
     parameter TIE_OFF_ARBURST = 0;
 endmodule
+
+
+// Dedicated FABulous clock-network source used by top_wrapper.
+(* blackbox *)
+module Global_Clock (
+    output wire CLK
+);
+endmodule

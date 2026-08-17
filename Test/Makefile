@@ -1,83 +1,90 @@
-MAX_BITBYTES=16384
-FAB_PROJ_ROOT=..
-BUILD_DIR=build
-YOSYS?=$(or $(FAB_YOSYS_PATH),yosys)
-NEXTPNR?=$(or $(FAB_NEXTPNR_PATH),nextpnr-generic)
-DESIGN=dma_a
-TESTBENCH=${DESIGN}_tb
-TOP_WRAPPER=top_wrapper
+FAB_PROJ_ROOT    ?= ..
+BUILD_DIR        ?= build
+USER_DESIGN_DIR  ?= $(FAB_PROJ_ROOT)/user_design
 
-FABRIC_FILES_DIR=${BUILD_DIR}/fabric_files
-USER_DESIGN_DIR=${FAB_PROJ_ROOT}/user_design
-USER_DESIGN_VERILOG=${USER_DESIGN_DIR}/${DESIGN}.v
-TOP_WRAPPER_VERILOG=${USER_DESIGN_DIR}/${TOP_WRAPPER}.v
-WAVEFORM_TYPE=fst
+AGU_MODULE       ?= conv3x3_hwc_channel_dma_agu
+DMA_WRAPPER      ?= dma_a
+TESTBENCH        ?= dma_address_mapper_tb
+TOP_WRAPPER      ?= top_wrapper
 
-VVP_ARGS=+output_waveform=${BUILD_DIR}/${DESIGN}.${WAVEFORM_TYPE}
-VVP_ARGS+=+bitstream_hex=${BUILD_DIR}/${DESIGN}.hex
-ifeq ($(WAVEFORM_TYPE),fst)
-    VVP_ARGS+=-fst
+AGU_RTL          ?= $(USER_DESIGN_DIR)/$(AGU_MODULE).sv
+DMA_WRAPPER_RTL  ?= $(USER_DESIGN_DIR)/$(DMA_WRAPPER).v
+TESTBENCH_RTL    ?= $(TESTBENCH).v
+TOP_WRAPPER_RTL  ?= $(USER_DESIGN_DIR)/$(TOP_WRAPPER).v
+IMAGE_MEM        ?= yolo_image_3x3.mem
+RTL_SOURCES       = $(AGU_RTL) $(DMA_WRAPPER_RTL)
+
+IVERILOG         ?= iverilog
+VVP              ?= vvp
+YOSYS            ?= $(or $(FAB_YOSYS_PATH),yosys)
+NEXTPNR          ?= $(or $(FAB_NEXTPNR_PATH),nextpnr-generic)
+MAX_BITBYTES     ?= 16384
+
+FABRIC_FILES_DIR := $(BUILD_DIR)/fabric_files
+NETLIST_JSON     := $(BUILD_DIR)/$(AGU_MODULE).json
+FASM_FILE        := $(BUILD_DIR)/$(AGU_MODULE).fasm
+BITSTREAM_BIN    := $(BUILD_DIR)/$(AGU_MODULE).bin
+BITSTREAM_HEX    := $(BUILD_DIR)/$(AGU_MODULE).hex
+
+ifneq ($(wildcard $(USER_DESIGN_DIR)/custom_prims.v),)
+CUSTOM_PRIMS := -extra-plib $(USER_DESIGN_DIR)/custom_prims.v
 endif
 
-#only add if custom_prims.v exists
-ifneq ($(wildcard ${USER_DESIGN_DIR}/custom_prims.v),)
-		CUSTOM_PRIMS=-extra-plib ${USER_DESIGN_DIR}/custom_prims.v
-endif
+.PHONY: all sim rtl_sim wave clean build_test_design run_yosys \
+	run_nextpnr run_bitgen copy_files mkdir_build check_rtl_files
 
-.PHONY: all run_FABulous_demo full build_test_design run_simulation_emulation mkdir_build clean FAB_sim build_demo_fabric
+all: rtl_sim
 
-sim: build_test_design run_simulation clean
+# Direct RTL verification of the AXI wrapper and fixed-function HWC halo AGU.
+sim: rtl_sim
 
-FAB_sim: build_demo_fabric build_test_design run_simulation clean
+rtl_sim: check_rtl_files mkdir_build
+	$(IVERILOG) -g2012 -Wall -s $(TESTBENCH) \
+		-o "$(BUILD_DIR)/$(TESTBENCH).vvp" \
+		"$(AGU_RTL)" "$(DMA_WRAPPER_RTL)" "$(TESTBENCH_RTL)"
+	$(VVP) "$(BUILD_DIR)/$(TESTBENCH).vvp" \
+		"+IMAGE_MEM=$(abspath $(IMAGE_MEM))"
 
-full_sim: run_FABulous_demo build_test_design run_simulation_emulation clean
+check_rtl_files:
+	@test -f "$(AGU_RTL)" || { echo "Missing AGU RTL: $(AGU_RTL)"; exit 1; }
+	@test -f "$(DMA_WRAPPER_RTL)" || { echo "Missing AXI wrapper RTL: $(DMA_WRAPPER_RTL)"; exit 1; }
+	@test -f "$(TESTBENCH_RTL)" || { echo "Missing testbench: $(TESTBENCH_RTL)"; exit 1; }
+	@test -f "$(IMAGE_MEM)" || { echo "Missing image memory file: $(IMAGE_MEM)"; exit 1; }
 
+wave:
+	gtkwave $(BUILD_DIR)/$(TESTBENCH).vcd
+
+# Optional FABulous synthesis/P&R/bitstream build after RTL verification.
+# This requires top_wrapper.v, custom_prims.v, and the generated fabric files
+# in the parent FABulous project.  top_wrapper must match the revised dma_a
+# map interface (9-bit buffer address plus zero-fill and last flags).
 build_test_design: run_yosys run_nextpnr run_bitgen copy_files
 
-run_simulation_emulation: run_emulation run_simulation
-
-run_FABulous_demo:
-	# Runs FABulous, generates the default fabric and generates a bitstream from the default user_design.
-	# Create build folders, since FABulous removes them after it runs its simulation.
-	FABulous ${FAB_PROJ_ROOT} -fs ${FAB_PROJ_ROOT}/FABulous.tcl
-	mkdir -p ${BUILD_DIR}
-	mkdir -p ${FABRIC_FILES_DIR}
-	mv -f ${DESIGN}.hex ${BUILD_DIR}/
-	mv -f ${DESIGN}.fst ${BUILD_DIR}/
-	cp -fu ${USER_DESIGN_DIR}/* ${BUILD_DIR}
-
-build_demo_fabric: mkdir_build
-	# Builds the default fabric
-	FABulous ${FAB_PROJ_ROOT} -ts ./build_fabulous_fabric.tcl
-
 run_yosys: mkdir_build
-	${YOSYS} -p "synth_fabulous -top ${TOP_WRAPPER} -json ${BUILD_DIR}/${DESIGN}.json ${CUSTOM_PRIMS}" ${USER_DESIGN_VERILOG} ${TOP_WRAPPER_VERILOG}
+	$(YOSYS) -p "synth_fabulous -top $(TOP_WRAPPER) -json $(NETLIST_JSON) $(CUSTOM_PRIMS)" \
+		"$(AGU_RTL)" "$(DMA_WRAPPER_RTL)" "$(TOP_WRAPPER_RTL)"
 
 run_nextpnr: mkdir_build
-	FAB_ROOT=${FAB_PROJ_ROOT} ${NEXTPNR} --uarch fabulous --json ${BUILD_DIR}/${DESIGN}.json -o fasm=${BUILD_DIR}/${DESIGN}.fasm
+	FAB_ROOT=$(FAB_PROJ_ROOT) $(NEXTPNR) --uarch fabulous \
+		--json $(NETLIST_JSON) \
+		-o fasm=$(FASM_FILE)
 
 run_bitgen: mkdir_build
-	bit_gen -genBitstream ${BUILD_DIR}/${DESIGN}.fasm ${FAB_PROJ_ROOT}/.FABulous/bitStreamSpec.bin ${BUILD_DIR}/${DESIGN}.bin
-	python3 makehex.py ${BUILD_DIR}/${DESIGN}.bin ${MAX_BITBYTES} ${BUILD_DIR}/${DESIGN}.hex
+	bit_gen -genBitstream $(FASM_FILE) \
+		$(FAB_PROJ_ROOT)/.FABulous/bitStreamSpec.bin \
+		$(BITSTREAM_BIN)
+	python3 makehex.py $(BITSTREAM_BIN) \
+		$(MAX_BITBYTES) $(BITSTREAM_HEX)
 
 copy_files: mkdir_build
-	find ${FAB_PROJ_ROOT}/Tile/ -name '*.v' -type f -exec cp {} ${FABRIC_FILES_DIR}/ \;
-	find ${FAB_PROJ_ROOT}/Fabric/ -name '*.v' -type f -exec cp {} ${FABRIC_FILES_DIR}/ \;
+	find $(FAB_PROJ_ROOT)/Tile -name '*.v' -type f \
+		-exec cp {} "$(FABRIC_FILES_DIR)/" \;
+	find $(FAB_PROJ_ROOT)/Fabric -name '*.v' -type f \
+		-exec cp {} "$(FABRIC_FILES_DIR)/" \;
 
 mkdir_build:
-	mkdir -p ${BUILD_DIR}
-	mkdir -p ${FABRIC_FILES_DIR}
-
-run_simulation:
-	iverilog -g2012 -s ${TESTBENCH} -o ${BUILD_DIR}/${DESIGN}.vvp ${FABRIC_FILES_DIR}/* ${USER_DESIGN_VERILOG} ${TESTBENCH}.v
-	vvp ${BUILD_DIR}/${DESIGN}.vvp ${VVP_ARGS}
-
-run_emulation:
-	iverilog -g2012 -D EMULATION -s ${TESTBENCH} -o ${BUILD_DIR}/${DESIGN}.vvp ${BUILD_DIR}/${DESIGN}.vh ${FABRIC_FILES_DIR}/* ${USER_DESIGN_VERILOG} ${TESTBENCH}.v
-	vvp ${BUILD_DIR}/${DESIGN}.vvp ${VVP_ARGS}
-
-run_GTKWave:
-	gtkwave ${BUILD_DIR}/${DESIGN}.${WAVEFORM_TYPE}
+	mkdir -p "$(BUILD_DIR)" "$(FABRIC_FILES_DIR)"
 
 clean:
-	rm -rf ${BUILD_DIR}
+	@test -n "$(BUILD_DIR)" && test "$(BUILD_DIR)" != "/"
+	rm -rf -- "$(BUILD_DIR)"
