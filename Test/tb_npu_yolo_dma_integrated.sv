@@ -14,15 +14,16 @@
 `endif
 
 // Combined YOLO 3x3 regression:
-//   * dma_a + conv3x3_hwc_channel_dma_agu load the activation SRAM banks.
-//   * This testbench still shifts each 8x8 weight slice into the NPU.
+//   * conv3x3_hwc_channel_dma_agu loads the activation SRAM banks.
+//   * The same DMA AGU loads every 8x8 weight slice into the NPU.
 //   * The original convolution-pass and psum-drain schedules are preserved.
 //   * All 32x32x16 results are compared with golden_conv3.mem.
 //
-// The map_* adapter below is deliberately a simulation memory model.  One
-// accepted DMA group reads eight contiguous HWC bytes and presents eight bank
-// writes in parallel.  It verifies integration with the NPU activation SRAM
-// ports, but it is not the future physical SRAM/input-buffer datapath.
+// The map_* adapter below is deliberately a simulation memory model.  An
+// activation group reads eight contiguous HWC bytes and writes eight activation
+// banks.  A weight group reads eight bytes separated by the DMA-provided stride
+// and applies one weight-shift cycle.  This verifies address/control integration
+// with the NPU, but it is not the future physical SRAM datapath.
 module tb_npu_yolo_dma_integrated;
 
     parameter int ARRAY_HEIGHT     = 8;
@@ -53,11 +54,13 @@ module tb_npu_yolo_dma_integrated;
     localparam int EXPECTED_GROUPS    = EXPECTED_DMA_LOADS * GROUPS_PER_LOAD;
     localparam int EXPECTED_ZERO_GROUPS = EXPECTED_DMA_LOADS * (GROUPS_PER_LOAD - 17 * 17);
     localparam int EXPECTED_WEIGHT_LOADS = 2 * 2 * 2 * 2 * 3 * 3;
+    localparam int EXPECTED_WEIGHT_GROUPS = EXPECTED_WEIGHT_LOADS * 8;
+    localparam int EXPECTED_WEIGHT_BYTES  = EXPECTED_WEIGHT_GROUPS * 8;
 
     // A non-zero base checks that the adapter interprets DMA byte addresses,
     // rather than accidentally treating them as raw_image array indices.
     localparam logic [31:0] IMAGE_BASE = 32'h1000_0000;
-    localparam logic [1:0] AXI_RESP_OKAY = 2'b00;
+    localparam logic [31:0] WEIGHT_BASE = 32'h2000_0000;
 
     logic clk_i;
     logic rst_n;
@@ -90,37 +93,36 @@ module tb_npu_yolo_dma_integrated;
     wire  [NUM_PSUM_BANKS-1:0][PSUM_WIDTH-1:0]      ext_psum_rdata;
 
     // ---------------------------------------------------------------------
-    // CPU model to dma_a AXI4-Lite slave
+    // Updated activation/weight DMA AGU interface
     // ---------------------------------------------------------------------
-    logic [9:0]  axil_awaddr;
-    logic        axil_awvalid;
-    wire         axil_awready;
-    logic [31:0] axil_wdata;
-    logic [3:0]  axil_wstrb;
-    logic        axil_wvalid;
-    wire         axil_wready;
-    wire [1:0]   axil_bresp;
-    wire         axil_bvalid;
-    logic        axil_bready;
-    logic [9:0]  axil_araddr;
-    logic        axil_arvalid;
-    wire         axil_arready;
-    wire [31:0]  axil_rdata;
-    wire [1:0]   axil_rresp;
-    wire         axil_rvalid;
-    logic        axil_rready;
+    logic       dma_start;
+    wire        dma_start_ready;
+    logic       dma_load_weight;
+    logic [31:0] dma_image_base;
+    logic [31:0] dma_weight_base;
+    logic       dma_tile_y;
+    logic       dma_tile_x;
+    logic       dma_cin_block;
+    logic       dma_cout_block;
+    logic [1:0] dma_kernel_y;
+    logic [1:0] dma_kernel_x;
+    wire        dma_busy;
+    wire        dma_done;
 
-    wire [31:0] dma_debug;
     wire        map_valid;
     wire        map_ready;
     wire [31:0] map_source_addr;
+    wire [4:0]  map_source_stride;
     wire [8:0]  map_buffer_addr;
     wire [7:0]  map_bank_mask;
+    wire        map_is_weight;
     wire        map_zero_fill;
     wire        map_last;
+    wire        map_weight_swap;
 
     logic dma_port_enable;
     integer dma_source_offset;
+    integer dma_weight_source_offset;
 
     // ---------------------------------------------------------------------
     // Problem data and scoreboards
@@ -129,10 +131,6 @@ module tb_npu_yolo_dma_integrated;
     logic [WEIGHT_WIDTH-1:0]     raw_weights_3x3_flat [0:WEIGHT_BYTES-1];
     logic [PSUM_WIDTH-1:0]       golden_conv3_flat    [0:OUTPUT_WORDS-1];
     logic [PSUM_WIDTH-1:0]       actual_conv3         [0:31][0:31][0:15];
-
-    // Module-level because the Icarus version in OSS CAD Suite does not
-    // support unpacked multidimensional arrays as subroutine ports.
-    logic [WEIGHT_WIDTH-1:0] tb_weight_slice [0:7][0:7];
 
     longint total_cycles;
     longint dma_act_cycles;
@@ -144,8 +142,12 @@ module tb_npu_yolo_dma_integrated;
     integer dma_load_count;
     integer dma_total_groups;
     integer dma_total_zero_groups;
+    integer dma_total_weight_groups;
+    integer dma_total_weight_bytes;
+    integer dma_total_weight_swaps;
     integer dma_groups_this_load;
     integer dma_last_this_load;
+    integer dma_swap_this_load;
     integer weight_load_count;
     integer compute_pass_count;
 
@@ -197,64 +199,92 @@ module tb_npu_yolo_dma_integrated;
         .ext_psum_rdata     (ext_psum_rdata)
     );
 
-    dma_a dma_dut (
-        .clk             (clk_i),
-        .rstn            (rst_n),
-        .O_top           (dma_debug),
-        .axil_awaddr     (axil_awaddr),
-        .axil_awvalid    (axil_awvalid),
-        .axil_awready    (axil_awready),
-        .axil_wdata      (axil_wdata),
-        .axil_wstrb      (axil_wstrb),
-        .axil_wvalid     (axil_wvalid),
-        .axil_wready     (axil_wready),
-        .axil_bresp      (axil_bresp),
-        .axil_bvalid     (axil_bvalid),
-        .axil_bready     (axil_bready),
-        .axil_araddr     (axil_araddr),
-        .axil_arvalid    (axil_arvalid),
-        .axil_arready    (axil_arready),
-        .axil_rdata      (axil_rdata),
-        .axil_rresp      (axil_rresp),
-        .axil_rvalid     (axil_rvalid),
-        .axil_rready     (axil_rready),
-        .map_valid       (map_valid),
-        .map_ready       (map_ready),
-        .map_source_addr (map_source_addr),
-        .map_buffer_addr (map_buffer_addr),
-        .map_bank_mask   (map_bank_mask),
-        .map_zero_fill   (map_zero_fill),
-        .map_last        (map_last)
+    conv3x3_hwc_channel_dma_agu #(
+        .SRC_ADDR_WIDTH (32),
+        .ACT_ADDR_WIDTH (ACT_ADDR_WIDTH)
+    ) dma_dut (
+        .clk_i                  (clk_i),
+        .rst_n                  (rst_n),
+        .start_i                (dma_start),
+        .start_ready_o          (dma_start_ready),
+        .load_weight_i          (dma_load_weight),
+        .image_base_i           (dma_image_base),
+        .weight_base_i          (dma_weight_base),
+        .tile_y_i               (dma_tile_y),
+        .tile_x_i               (dma_tile_x),
+        .cin_block_i            (dma_cin_block),
+        .cout_block_i           (dma_cout_block),
+        .kernel_y_i             (dma_kernel_y),
+        .kernel_x_i             (dma_kernel_x),
+        .busy_o                 (dma_busy),
+        .done_o                 (dma_done),
+        .load_valid_o           (map_valid),
+        .load_ready_i           (map_ready),
+        .load_src_addr_o        (map_source_addr),
+        .load_src_lane_stride_o (map_source_stride),
+        .load_dst_addr_o        (map_buffer_addr),
+        .load_dst_bank_mask_o   (map_bank_mask),
+        .load_is_weight_o       (map_is_weight),
+        .load_zero_fill_o       (map_zero_fill),
+        .load_last_o            (map_last),
+        .weight_swap_o          (map_weight_swap)
     );
 
     // ---------------------------------------------------------------------
-    // Simulation-only SRAM-to-eight-bank adapter
+    // Simulation-only SRAM/weight-to-NPU adapter
     // ---------------------------------------------------------------------
-    // The adapter owns the raw activation ports only during a DMA load.  During
-    // compute, the original per-row activation read-address schedule owns them.
+    // The adapter owns the raw activation ports during an activation load and
+    // the NPU weight-shift inputs during a weight load.  During compute, the
+    // original per-row activation read-address schedule owns the SRAM addresses.
     assign map_ready = dma_port_enable;
 
     always_comb begin
         ext_act_sram_we    = '0;
         ext_act_sram_addr  = act_compute_addr;
         ext_act_sram_wdata = '0;
+        weight_shift_in    = '0;
+        weight_shift_en    = 1'b0;
+        swap_weights       = dma_port_enable && map_weight_swap;
         dma_source_offset  = 0;
+        dma_weight_source_offset = 0;
 
         if (dma_port_enable) begin
-            for (int r = 0; r < NUM_ACT_BANKS; r++) begin
-                ext_act_sram_addr[r] = map_buffer_addr;
-
-                if (map_valid && map_bank_mask[r]) begin
-                    ext_act_sram_we[r] = 1'b1;
-
-                    if (map_zero_fill) begin
-                        ext_act_sram_wdata[r] = '0;
-                    end else if ((map_source_addr >= IMAGE_BASE) &&
-                                 (map_source_addr + 7 < IMAGE_BASE + IMAGE_BYTES)) begin
-                        dma_source_offset = map_source_addr - IMAGE_BASE;
-                        ext_act_sram_wdata[r] = raw_image_3x3_flat[dma_source_offset + r];
+            if (map_valid && map_is_weight) begin
+                weight_shift_en = 1'b1;
+                for (int r = 0; r < ARRAY_HEIGHT; r++) begin
+                    if (map_bank_mask[r] &&
+                        (map_source_addr >= WEIGHT_BASE) &&
+                        (map_source_addr + 7*map_source_stride <
+                         WEIGHT_BASE + WEIGHT_BYTES)) begin
+                        dma_weight_source_offset =
+                            (map_source_addr - WEIGHT_BASE) +
+                            r*map_source_stride;
+                        weight_shift_in[r] =
+                            raw_weights_3x3_flat[dma_weight_source_offset];
                     end else begin
-                        ext_act_sram_wdata[r] = 'x;
+                        weight_shift_in[r] = 'x;
+                    end
+                end
+            end else begin
+                for (int r = 0; r < NUM_ACT_BANKS; r++) begin
+                    ext_act_sram_addr[r] = map_buffer_addr;
+
+                    if (map_valid && map_bank_mask[r]) begin
+                        ext_act_sram_we[r] = 1'b1;
+
+                        if (map_zero_fill) begin
+                            ext_act_sram_wdata[r] = '0;
+                        end else if ((map_source_addr >= IMAGE_BASE) &&
+                                     (map_source_addr + 7*map_source_stride <
+                                      IMAGE_BASE + IMAGE_BYTES)) begin
+                            dma_source_offset =
+                                (map_source_addr - IMAGE_BASE) +
+                                r*map_source_stride;
+                            ext_act_sram_wdata[r] =
+                                raw_image_3x3_flat[dma_source_offset];
+                        end else begin
+                            ext_act_sram_wdata[r] = 'x;
+                        end
                     end
                 end
             end
@@ -266,103 +296,116 @@ module tb_npu_yolo_dma_integrated;
         if (!rst_n) begin
             dma_total_groups      <= 0;
             dma_total_zero_groups <= 0;
+            dma_total_weight_groups <= 0;
+            dma_total_weight_bytes  <= 0;
+            dma_total_weight_swaps  <= 0;
             dma_groups_this_load  <= 0;
             dma_last_this_load    <= 0;
-        end else if (map_valid && map_ready) begin
-            dma_total_groups     <= dma_total_groups + 1;
-            dma_groups_this_load <= dma_groups_this_load + 1;
+            dma_swap_this_load    <= 0;
+        end else begin
+            if (map_valid && map_ready) begin
+                dma_groups_this_load <= dma_groups_this_load + 1;
 
-            if (map_zero_fill)
-                dma_total_zero_groups <= dma_total_zero_groups + 1;
-            if (map_last)
-                dma_last_this_load <= dma_last_this_load + 1;
+                if (map_last)
+                    dma_last_this_load <= dma_last_this_load + 1;
 
-            if (map_buffer_addr !== dma_groups_this_load[8:0]) begin
-                $display("ERROR: DMA destination sequence got=%0d expected=%0d",
-                         map_buffer_addr, dma_groups_this_load);
-                errors = errors + 1;
+                if (map_buffer_addr !== dma_groups_this_load[8:0]) begin
+                    $display("ERROR: DMA destination/shift sequence got=%0d expected=%0d",
+                             map_buffer_addr, dma_groups_this_load);
+                    errors = errors + 1;
+                end
+
+                if (map_bank_mask !== 8'hff) begin
+                    $display("ERROR: DMA bank/lane mask got=%02h expected=ff",
+                             map_bank_mask);
+                    errors = errors + 1;
+                end
+
+                if (map_is_weight) begin
+                    dma_total_weight_groups <= dma_total_weight_groups + 1;
+                    dma_total_weight_bytes  <= dma_total_weight_bytes + 8;
+
+                    if (map_source_stride !== 5'd16) begin
+                        $display("ERROR: DMA weight stride got=%0d expected=16",
+                                 map_source_stride);
+                        errors = errors + 1;
+                    end
+                    if (map_zero_fill) begin
+                        $display("ERROR: DMA weight command requested zero fill");
+                        errors = errors + 1;
+                    end
+                    if (!((map_source_addr >= WEIGHT_BASE) &&
+                          (map_source_addr + 7*map_source_stride <
+                           WEIGHT_BASE + WEIGHT_BYTES))) begin
+                        $display("ERROR: DMA source address out of weight range: %08h",
+                                 map_source_addr);
+                        errors = errors + 1;
+                    end
+                end else begin
+                    dma_total_groups <= dma_total_groups + 1;
+
+                    if (map_source_stride !== 5'd1) begin
+                        $display("ERROR: DMA activation stride got=%0d expected=1",
+                                 map_source_stride);
+                        errors = errors + 1;
+                    end
+                    if (map_zero_fill)
+                        dma_total_zero_groups <= dma_total_zero_groups + 1;
+                    if (!map_zero_fill &&
+                        !((map_source_addr >= IMAGE_BASE) &&
+                          (map_source_addr + 7*map_source_stride <
+                           IMAGE_BASE + IMAGE_BYTES))) begin
+                        $display("ERROR: DMA source address out of image range: %08h",
+                                 map_source_addr);
+                        errors = errors + 1;
+                    end
+                end
             end
 
-            if (!map_zero_fill &&
-                !((map_source_addr >= IMAGE_BASE) &&
-                  (map_source_addr + 7 < IMAGE_BASE + IMAGE_BYTES))) begin
-                $display("ERROR: DMA source address out of image range: %08h",
-                         map_source_addr);
-                errors = errors + 1;
+            if (map_weight_swap) begin
+                dma_total_weight_swaps <= dma_total_weight_swaps + 1;
+                dma_swap_this_load     <= dma_swap_this_load + 1;
+
+                if (map_valid || !map_is_weight) begin
+                    $display("ERROR: DMA weight swap overlaps an invalid command state");
+                    errors = errors + 1;
+                end
             end
         end
     end
-
-    // ---------------------------------------------------------------------
-    // AXI-Lite CPU helper
-    // ---------------------------------------------------------------------
-    task automatic axil_write(input logic [9:0] addr,
-                              input logic [31:0] data);
-        bit aw_done;
-        bit w_done;
-        begin
-            aw_done = 1'b0;
-            w_done  = 1'b0;
-
-            @(negedge clk_i);
-            axil_awaddr  = addr;
-            axil_awvalid = 1'b1;
-            axil_wdata   = data;
-            axil_wstrb   = 4'hf;
-            axil_wvalid  = 1'b1;
-
-            while (!aw_done || !w_done) begin
-                @(posedge clk_i);
-                if (axil_awvalid && axil_awready)
-                    aw_done = 1'b1;
-                if (axil_wvalid && axil_wready)
-                    w_done = 1'b1;
-
-                @(negedge clk_i);
-                if (aw_done)
-                    axil_awvalid = 1'b0;
-                if (w_done)
-                    axil_wvalid = 1'b0;
-            end
-
-            while (!axil_bvalid)
-                @(negedge clk_i);
-
-            if (axil_bresp !== AXI_RESP_OKAY) begin
-                $display("ERROR: AXI write addr=%03h data=%08h response=%b",
-                         addr, data, axil_bresp);
-                errors = errors + 1;
-            end
-
-            // Let dma_a observe BREADY and retire the response before the next
-            // transaction is launched.
-            @(posedge clk_i);
-            @(negedge clk_i);
-        end
-    endtask
 
     // One call is the integrated replacement for the original procedural
     // dma_load_yolo_halo_patch task.
     task automatic dma_load_yolo_halo_patch(input int tile_y,
                                              input int tile_x,
                                              input int cin_block);
-        logic [31:0] config_word;
         longint start_cycle;
         begin
             start_cycle = total_cycles;
-            config_word = (cin_block << 2) | (tile_y << 1) | tile_x;
 
             @(negedge clk_i);
+            while (!dma_start_ready)
+                @(negedge clk_i);
+
             dma_groups_this_load = 0;
             dma_last_this_load   = 0;
+            dma_swap_this_load   = 0;
             dma_port_enable      = 1'b1;
+            dma_load_weight      = 1'b0;
+            dma_image_base       = IMAGE_BASE;
+            dma_tile_y           = tile_y[0];
+            dma_tile_x           = tile_x[0];
+            dma_cin_block        = cin_block[0];
+            dma_cout_block       = 1'b0;
+            dma_kernel_y         = '0;
+            dma_kernel_x         = '0;
+            dma_start            = 1'b1;
 
-            axil_write(10'h008, config_word);
-            axil_write(10'h000, IMAGE_BASE);
+            @(negedge clk_i);
+            dma_start = 1'b0;
 
-            wait (dma_debug[2] === 1'b1); // busy
-            wait ((dma_debug[2] === 1'b0) &&
-                  (dma_debug[1] === 1'b1)); // sticky done
+            wait (dma_busy === 1'b1);
+            wait (dma_done === 1'b1);
             @(negedge clk_i);
 
             dma_port_enable = 1'b0;
@@ -381,11 +424,16 @@ module tb_npu_yolo_dma_integrated;
                          tile_y, tile_x, cin_block, dma_last_this_load);
                 errors = errors + 1;
             end
+            if (dma_swap_this_load != 0) begin
+                $display("ERROR: activation DMA load emitted %0d weight swaps",
+                         dma_swap_this_load);
+                errors = errors + 1;
+            end
         end
     endtask
 
     // ---------------------------------------------------------------------
-    // Original NPU weight, compute, and drain scheduling
+    // DMA weight loading plus original NPU compute and drain scheduling
     // ---------------------------------------------------------------------
     task automatic dma_init_bias_zero;
         begin
@@ -400,26 +448,62 @@ module tb_npu_yolo_dma_integrated;
         end
     endtask
 
-    task automatic tb_load_weights_slice;
+    task automatic dma_load_weights_slice(input int kernel_y,
+                                          input int kernel_x,
+                                          input int cin_block,
+                                          input int cout_block);
         longint start_cycle;
         begin
             start_cycle = total_cycles;
+
             @(negedge clk_i);
-            weight_shift_en = 1'b1;
-            for (int s = 0; s < 8; s++) begin
-                for (int r = 0; r < 8; r++)
-                    weight_shift_in[r] = tb_weight_slice[r][7-s];
+            while (!dma_start_ready)
                 @(negedge clk_i);
-            end
-            weight_shift_en = 1'b0;
+
+            dma_groups_this_load = 0;
+            dma_last_this_load   = 0;
+            dma_swap_this_load   = 0;
+            dma_port_enable      = 1'b1;
+            dma_load_weight      = 1'b1;
+            dma_weight_base      = WEIGHT_BASE;
+            dma_tile_y           = 1'b0;
+            dma_tile_x           = 1'b0;
+            dma_cin_block        = cin_block[0];
+            dma_cout_block       = cout_block[0];
+            dma_kernel_y         = kernel_y[1:0];
+            dma_kernel_x         = kernel_x[1:0];
+            dma_start            = 1'b1;
+
             @(negedge clk_i);
-            swap_weights = 1'b1;
+            dma_start = 1'b0;
+
+            wait (dma_busy === 1'b1);
+            wait (dma_done === 1'b1);
             @(negedge clk_i);
-            swap_weights = 1'b0;
+            dma_port_enable = 1'b0;
 
             weight_load_count  = weight_load_count + 1;
             weight_load_cycles = weight_load_cycles +
                                  (total_cycles - start_cycle);
+
+            if (dma_groups_this_load != 8) begin
+                $display("ERROR: weight DMA ky=%0d kx=%0d cin=%0d cout=%0d emitted %0d groups, expected 8",
+                         kernel_y, kernel_x, cin_block, cout_block,
+                         dma_groups_this_load);
+                errors = errors + 1;
+            end
+            if (dma_last_this_load != 1) begin
+                $display("ERROR: weight DMA ky=%0d kx=%0d cin=%0d cout=%0d emitted map_last %0d times",
+                         kernel_y, kernel_x, cin_block, cout_block,
+                         dma_last_this_load);
+                errors = errors + 1;
+            end
+            if (dma_swap_this_load != 1) begin
+                $display("ERROR: weight DMA ky=%0d kx=%0d cin=%0d cout=%0d emitted swap %0d times",
+                         kernel_y, kernel_x, cin_block, cout_block,
+                         dma_swap_this_load);
+                errors = errors + 1;
+            end
         end
     endtask
 
@@ -531,23 +615,21 @@ module tb_npu_yolo_dma_integrated;
         psum_write_en  = '0;
         psum_read_addr = '0;
         psum_write_addr = '0;
-        weight_shift_in = '0;
-        weight_shift_en = 1'b0;
-        swap_weights    = 1'b0;
         act_compute_addr = '0;
         ext_psum_we      = '0;
         ext_psum_addr    = '0;
         ext_psum_wdata   = '0;
 
-        axil_awaddr  = '0;
-        axil_awvalid = 1'b0;
-        axil_wdata   = '0;
-        axil_wstrb   = '0;
-        axil_wvalid  = 1'b0;
-        axil_bready  = 1'b1;
-        axil_araddr  = '0;
-        axil_arvalid = 1'b0;
-        axil_rready  = 1'b1;
+        dma_start        = 1'b0;
+        dma_load_weight  = 1'b0;
+        dma_image_base   = IMAGE_BASE;
+        dma_weight_base  = WEIGHT_BASE;
+        dma_tile_y       = 1'b0;
+        dma_tile_x       = 1'b0;
+        dma_cin_block    = 1'b0;
+        dma_cout_block   = 1'b0;
+        dma_kernel_y     = '0;
+        dma_kernel_x     = '0;
 
         dma_port_enable       = 1'b0;
         total_cycles          = 0;
@@ -559,8 +641,12 @@ module tb_npu_yolo_dma_integrated;
         dma_load_count        = 0;
         dma_total_groups      = 0;
         dma_total_zero_groups = 0;
+        dma_total_weight_groups = 0;
+        dma_total_weight_bytes  = 0;
+        dma_total_weight_swaps  = 0;
         dma_groups_this_load  = 0;
         dma_last_this_load    = 0;
+        dma_swap_this_load    = 0;
         weight_load_count     = 0;
         compute_pass_count    = 0;
 
@@ -587,7 +673,7 @@ module tb_npu_yolo_dma_integrated;
             crossbar_sel[r] = r[BANK_SEL_WIDTH-1:0];
 
         $display("===================================================================");
-        $display(" YOLO 3x3 COMBINED TEST: RTL DMA ACTIVATIONS + TB WEIGHT LOADER");
+        $display(" YOLO 3x3 COMBINED TEST: RTL DMA ACTIVATIONS + RTL DMA WEIGHTS");
         $display("===================================================================");
 
         for (int ty = 0; ty < 2; ty++) begin
@@ -612,20 +698,10 @@ module tb_npu_yolo_dma_integrated;
                                             ((pass_idx % 2) ? 8'hff : 8'h00);
                                 hold_zero = (pass_idx == 0);
 
-                                for (int r = 0; r < 8; r++) begin
-                                    for (int c = 0; c < 8; c++) begin
-                                        int flat_w;
-                                        flat_w = (ky*3*16*16) +
-                                                 (kx*16*16) +
-                                                 ((cin_block*8+r)*16) +
-                                                 (cout_block*8+c);
-                                        tb_weight_slice[r][c] =
-                                            raw_weights_3x3_flat[flat_w];
-                                    end
-                                end
-
-                                // Weights intentionally remain testbench-loaded.
-                                tb_load_weights_slice();
+                                // The updated DMA emits the same c=7..0 shift
+                                // order formerly generated by the testbench.
+                                dma_load_weights_slice(ky, kx,
+                                                       cin_block, cout_block);
                                 run_conv3x3_pass(ky, kx, swap_mode, hold_zero);
                                 pass_idx = pass_idx + 1;
                             end
@@ -672,8 +748,23 @@ module tb_npu_yolo_dma_integrated;
             errors = errors + 1;
         end
         if (weight_load_count != EXPECTED_WEIGHT_LOADS) begin
-            $display("ERROR: TB weight loads=%0d expected=%0d",
+            $display("ERROR: DMA weight loads=%0d expected=%0d",
                      weight_load_count, EXPECTED_WEIGHT_LOADS);
+            errors = errors + 1;
+        end
+        if (dma_total_weight_groups != EXPECTED_WEIGHT_GROUPS) begin
+            $display("ERROR: DMA weight groups=%0d expected=%0d",
+                     dma_total_weight_groups, EXPECTED_WEIGHT_GROUPS);
+            errors = errors + 1;
+        end
+        if (dma_total_weight_bytes != EXPECTED_WEIGHT_BYTES) begin
+            $display("ERROR: DMA weight bytes=%0d expected=%0d",
+                     dma_total_weight_bytes, EXPECTED_WEIGHT_BYTES);
+            errors = errors + 1;
+        end
+        if (dma_total_weight_swaps != EXPECTED_WEIGHT_LOADS) begin
+            $display("ERROR: DMA weight swaps=%0d expected=%0d",
+                     dma_total_weight_swaps, EXPECTED_WEIGHT_LOADS);
             errors = errors + 1;
         end
         if (compute_pass_count != EXPECTED_WEIGHT_LOADS) begin
@@ -684,15 +775,18 @@ module tb_npu_yolo_dma_integrated;
 
         $display("-------------------------------------------------------------------");
         $display("DMA activation loads       : %0d", dma_load_count);
-        $display("DMA accepted groups        : %0d", dma_total_groups);
+        $display("DMA activation groups      : %0d", dma_total_groups);
         $display("DMA expanded bank writes   : %0d", dma_total_groups*8);
-        $display("TB weight-slice loads      : %0d", weight_load_count);
+        $display("DMA weight-slice loads     : %0d", weight_load_count);
+        $display("DMA weight groups          : %0d", dma_total_weight_groups);
+        $display("DMA weight bytes           : %0d", dma_total_weight_bytes);
+        $display("DMA weight swaps           : %0d", dma_total_weight_swaps);
         $display("NPU convolution passes     : %0d", compute_pass_count);
         $display("Total simulation cycles    : %0d", total_cycles);
         $display("-------------------------------------------------------------------");
 
         if (errors == 0) begin
-            $display("PASS: RTL DMA-loaded activations produced all 16,384 golden YOLO 3x3 outputs");
+            $display("PASS: RTL DMA-loaded activations and weights produced all 16,384 golden YOLO 3x3 outputs");
             $finish;
         end else begin
             $fatal(1, "FAIL: combined DMA/NPU regression found %0d errors", errors);

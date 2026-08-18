@@ -5,26 +5,36 @@
 //
 // AXI4-Lite is used only to configure and start the fixed-function AGU.  The
 // protocol-neutral map_* stream is intended for the SRAM/input-buffer adapter.
-// One accepted map command represents eight byte writes:
+// One accepted map command represents eight byte transfers:
 //
-//   bank r source      = map_source_addr + r, r=0..7
-//   bank r destination = map_buffer_addr
+//   activation lane r source = map_source_addr + r
+//   weight lane r source     = map_source_addr +
+//                              r * map_source_stride
+//   destination/shift index  = map_buffer_addr
 //
-// When map_zero_fill is high, the adapter must not read external SRAM and must
-// instead write zero to all banks selected by map_bank_mask.
+// map_is_weight selects the interpretation.  For an activation command,
+// map_zero_fill tells the adapter to write zero to all selected banks without
+// reading external memory.  For a weight command, the adapter applies the eight
+// returned bytes on one NPU weight-shift cycle.  map_weight_swap then pulses
+// after the eighth accepted weight command.
 //
 // Register map:
-//   0x00 W: image_base byte address and start one 18x18 halo load
-//   0x00 R: last accepted image_base byte address
+//   0x00 W: source-base byte address and start the selected operation
+//   0x00 R: last accepted source-base byte address
 //   0x04 R: status {29'b0, error_sticky, busy, done_sticky}
-//   0x08 W: configuration {29'b0, cin_block, tile_y, tile_x}
-//   0x08 R: configuration {29'b0, cin_block, tile_y, tile_x}
+//   0x08 W/R configuration:
+//          [0]   tile_x       (activation mode)
+//          [1]   tile_y       (activation mode)
+//          [2]   cin_block    (both modes)
+//          [3]   load_weight  (0: activation, 1: weight)
+//          [4]   cout_block   (weight mode)
+//          [6:5] kernel_y     (weight mode, valid values 0..2)
+//          [8:7] kernel_x     (weight mode, valid values 0..2)
 //
-// Software must write 0x08 before 0x00.  To reproduce one invocation of
-// dma_load_yolo_halo_patch(tile_y, tile_x, cin_block), write the desired config
-// and then write its image base to 0x00.  The NPU regression invokes that load
-// again for the second output-channel block, so software must repeat the start
-// if it needs the exact same total number of writes as that regression.
+// Software writes 0x08 before 0x00.  The original activation programming model
+// is therefore backward compatible: bits [8:3] remain zero, and the write to
+// 0x00 launches one 18x18 halo load.  In weight mode, the write to 0x00 instead
+// supplies weight_base and launches one fixed 8x8 slice.
 module dma_a (
     input  wire        clk,
     input  wire        rstn,
@@ -54,22 +64,25 @@ module dma_a (
     output reg         axil_rvalid,
     input  wire        axil_rready,
 
-    // Protocol-neutral activation-load group command.
+    // Protocol-neutral activation/weight load-group command.
     output wire        map_valid,
     input  wire        map_ready,
     output wire [31:0] map_source_addr,
+    output wire [4:0]  map_source_stride,
     output wire [8:0]  map_buffer_addr,
     output wire [7:0]  map_bank_mask,
+    output wire        map_is_weight,
     output wire        map_zero_fill,
-    output wire        map_last
+    output wire        map_last,
+    output wire        map_weight_swap
 );
 
     localparam [1:0] AXI_RESP_OKAY   = 2'b00;
     localparam [1:0] AXI_RESP_SLVERR = 2'b10;
     localparam [1:0] AXI_RESP_DECERR = 2'b11;
 
-    reg [31:0] image_base_reg;
-    reg [2:0]  config_reg;
+    reg [31:0] source_base_reg;
+    reg [8:0]  config_reg;
     reg        start_pulse;
     reg        done_sticky;
     reg        error_sticky;
@@ -92,8 +105,9 @@ module dma_a (
     wire [9:0]  write_addr;
     wire [31:0] write_data;
     wire [3:0]  write_strb;
-    wire [31:0] next_image_base;
+    wire [31:0] next_source_base;
     wire [31:0] next_config_word;
+    wire        invalid_weight_config;
 
     function [31:0] apply_wstrb;
         input [31:0] old_value;
@@ -115,7 +129,9 @@ module dma_a (
     assign O_top[4]    = map_valid;
     assign O_top[5]    = map_zero_fill;
     assign O_top[6]    = map_last;
-    assign O_top[31:7] = 25'd0;
+    assign O_top[7]    = map_is_weight;
+    assign O_top[8]    = map_weight_swap;
+    assign O_top[31:9] = 23'd0;
 
     // AXI-Lite write address and data channels are captured independently.
     assign axil_awready = !aw_hold_valid && !axil_bvalid;
@@ -131,17 +147,21 @@ module dma_a (
     assign write_data = w_hold_valid  ? wdata_hold  : axil_wdata;
     assign write_strb = w_hold_valid  ? wstrb_hold  : axil_wstrb;
 
-    assign next_image_base = apply_wstrb(
-        image_base_reg, write_data, write_strb
+    assign next_source_base = apply_wstrb(
+        source_base_reg, write_data, write_strb
     );
     assign next_config_word = apply_wstrb(
-        {29'd0, config_reg}, write_data, write_strb
+        {23'd0, config_reg}, write_data, write_strb
     );
+
+    assign invalid_weight_config = config_reg[3] &&
+                                   ((config_reg[6:5] == 2'd3) ||
+                                    (config_reg[8:7] == 2'd3));
 
     always @(posedge clk) begin
         if (!rstn) begin
-            image_base_reg <= 32'd0;
-            config_reg     <= 3'd0;
+            source_base_reg <= 32'd0;
+            config_reg      <= 9'd0;
             start_pulse    <= 1'b0;
             done_sticky    <= 1'b0;
             error_sticky   <= 1'b0;
@@ -179,11 +199,12 @@ module dma_a (
 
                 case (write_addr)
                     10'h000: begin
-                        if (agu_busy || !agu_start_ready || start_pulse) begin
+                        if (agu_busy || !agu_start_ready || start_pulse ||
+                            invalid_weight_config) begin
                             axil_bresp    <= AXI_RESP_SLVERR;
                             error_sticky <= 1'b1;
                         end else begin
-                            image_base_reg <= next_image_base;
+                            source_base_reg <= next_source_base;
                             start_pulse    <= 1'b1;
                             done_sticky    <= 1'b0;
                             error_sticky   <= 1'b0;
@@ -196,7 +217,7 @@ module dma_a (
                             axil_bresp    <= AXI_RESP_SLVERR;
                             error_sticky <= 1'b1;
                         end else begin
-                            config_reg <= next_config_word[2:0];
+                            config_reg <= next_config_word[8:0];
                             axil_bresp <= AXI_RESP_OKAY;
                         end
                     end
@@ -225,7 +246,7 @@ module dma_a (
                 axil_rvalid <= 1'b1;
                 case (axil_araddr)
                     10'h000: begin
-                        axil_rdata <= image_base_reg;
+                        axil_rdata <= source_base_reg;
                         axil_rresp <= AXI_RESP_OKAY;
                     end
                     10'h004: begin
@@ -235,7 +256,7 @@ module dma_a (
                         axil_rresp <= AXI_RESP_OKAY;
                     end
                     10'h008: begin
-                        axil_rdata <= {29'd0, config_reg};
+                        axil_rdata <= {23'd0, config_reg};
                         axil_rresp <= AXI_RESP_OKAY;
                     end
                     default: begin
@@ -255,19 +276,27 @@ module dma_a (
         .rst_n(rstn),
         .start_i(start_pulse),
         .start_ready_o(agu_start_ready),
-        .image_base_i(image_base_reg),
+        .load_weight_i(config_reg[3]),
+        .image_base_i(source_base_reg),
+        .weight_base_i(source_base_reg),
         .tile_y_i(config_reg[1]),
         .tile_x_i(config_reg[0]),
         .cin_block_i(config_reg[2]),
+        .cout_block_i(config_reg[4]),
+        .kernel_y_i(config_reg[6:5]),
+        .kernel_x_i(config_reg[8:7]),
         .busy_o(agu_busy),
         .done_o(agu_done),
         .load_valid_o(map_valid),
         .load_ready_i(map_ready),
         .load_src_addr_o(map_source_addr),
+        .load_src_lane_stride_o(map_source_stride),
         .load_dst_addr_o(map_buffer_addr),
         .load_dst_bank_mask_o(map_bank_mask),
+        .load_is_weight_o(map_is_weight),
         .load_zero_fill_o(map_zero_fill),
-        .load_last_o(map_last)
+        .load_last_o(map_last),
+        .weight_swap_o(map_weight_swap)
     );
 
 endmodule
