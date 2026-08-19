@@ -106,7 +106,7 @@ module dma_a (
     wire [31:0] write_data;
     wire [3:0]  write_strb;
     wire [31:0] next_source_base;
-    wire [31:0] next_config_word;
+    wire [8:0]  next_config;
     wire        invalid_weight_config;
 
     function [31:0] apply_wstrb;
@@ -150,9 +150,12 @@ module dma_a (
     assign next_source_base = apply_wstrb(
         source_base_reg, write_data, write_strb
     );
-    assign next_config_word = apply_wstrb(
-        {23'd0, config_reg}, write_data, write_strb
-    );
+    // Only nine configuration bits exist.  Avoid synthesizing a second
+    // 32-bit write-strobe mux and then discarding 23 of its outputs.
+    assign next_config[7:0] = write_strb[0] ? write_data[7:0]
+                                                 : config_reg[7:0];
+    assign next_config[8]   = write_strb[1] ? write_data[8]
+                                                 : config_reg[8];
 
     assign invalid_weight_config = config_reg[3] &&
                                    ((config_reg[6:5] == 2'd3) ||
@@ -217,7 +220,7 @@ module dma_a (
                             axil_bresp    <= AXI_RESP_SLVERR;
                             error_sticky <= 1'b1;
                         end else begin
-                            config_reg <= next_config_word[8:0];
+                            config_reg <= next_config;
                             axil_bresp <= AXI_RESP_OKAY;
                         end
                     end
