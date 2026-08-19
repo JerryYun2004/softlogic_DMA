@@ -95,24 +95,12 @@ module conv3x3_hwc_channel_dma_agu #(
 
     localparam logic [LINEAR_COUNT_WIDTH-1:0] LAST_PIXEL = TILE_PIXELS - 1;
     localparam logic [COORD_WIDTH-1:0]        LAST_COORD = TILE_SIDE - 1;
+    localparam logic [COORD_WIDTH-1:0]        ROW_END_ARM_COORD = TILE_SIDE - 2;
 
     // HWC source-address increments.  Adjacent x coordinates are 16 bytes
     // apart.  From local (y,17) to (y+1,0): 512 - 17*16 = 240 bytes.
     localparam logic [SRC_ADDR_WIDTH-1:0] PIXEL_STEP = 16;
     localparam logic [SRC_ADDR_WIDTH-1:0] ROW_STEP   = 240;
-
-    // Weight layout strides.  Eight PE rows read eight CI values in parallel;
-    // adjacent CI rows are separated by all 16 output channels.
-    localparam logic [SRC_ADDR_WIDTH-1:0] WEIGHT_CIN_BLOCK_STEP = 128;
-    localparam logic [SRC_ADDR_WIDTH-1:0] WEIGHT_COUT_BLOCK_STEP = 8;
-    localparam logic [SRC_ADDR_WIDTH-1:0] WEIGHT_FIRST_COLUMN   = 7;
-
-    // Byte offsets of local patch coordinate (0,0), before channel-block offset.
-    // tile 0 starts at global coordinate -1; tile 1 starts at coordinate 15.
-    localparam logic [SRC_ADDR_WIDTH-1:0] ORIGIN_00 = -528; // y=-1, x=-1
-    localparam logic [SRC_ADDR_WIDTH-1:0] ORIGIN_01 = -272; // y=-1, x=15
-    localparam logic [SRC_ADDR_WIDTH-1:0] ORIGIN_10 = 7664; // y=15, x=-1
-    localparam logic [SRC_ADDR_WIDTH-1:0] ORIGIN_11 = 7920; // y=15, x=15
 
     typedef enum logic [1:0] {
         STATE_IDLE,
@@ -128,47 +116,55 @@ module conv3x3_hwc_channel_dma_agu #(
     logic [COORD_WIDTH-1:0]            local_x_q;
     logic [2:0]                        weight_shift_q;
     logic [SRC_ADDR_WIDTH-1:0]         src_addr_q;
+    logic                              row_end_q;
     logic                              tile_y_q;
     logic                              tile_x_q;
 
-    logic [SRC_ADDR_WIDTH-1:0]         origin_offset_d;
-    logic [SRC_ADDR_WIDTH-1:0]         channel_offset_d;
-    logic [SRC_ADDR_WIDTH-1:0]         weight_tap_offset_d;
+    logic [SRC_ADDR_WIDTH-1:0]         activation_start_offset_d;
+    logic [3:0]                        weight_tap_index_d;
+    logic [SRC_ADDR_WIDTH-1:0]         weight_start_offset_d;
     logic [SRC_ADDR_WIDTH-1:0]         weight_start_addr_d;
     logic                              pad_y;
     logic                              pad_x;
 
     always_comb begin
-        case ({tile_y_i, tile_x_i})
-            2'b00: origin_offset_d = ORIGIN_00;
-            2'b01: origin_offset_d = ORIGIN_01;
-            2'b10: origin_offset_d = ORIGIN_10;
-            default: origin_offset_d = ORIGIN_11;
+        // Predecode tile and channel-block selection into one constant.  This
+        // turns the activation launch path into one base-plus-offset adder.
+        case ({tile_y_i, tile_x_i, cin_block_i})
+            3'b000: activation_start_offset_d = -528;
+            3'b001: activation_start_offset_d = -520;
+            3'b010: activation_start_offset_d = -272;
+            3'b011: activation_start_offset_d = -264;
+            3'b100: activation_start_offset_d = 7664;
+            3'b101: activation_start_offset_d = 7672;
+            3'b110: activation_start_offset_d = 7920;
+            default: activation_start_offset_d = 7928;
         endcase
     end
 
-    assign channel_offset_d = cin_block_i ? 8 : 0;
-
-    // Fixed 3x3 tap offsets avoid synthesizing a general multiplier.
+    // Fixed 3x3 tap indices avoid synthesizing a general multiplier.
     always_comb begin
         case ({kernel_y_i, kernel_x_i})
-            4'b0000: weight_tap_offset_d = 0;
-            4'b0001: weight_tap_offset_d = 256;
-            4'b0010: weight_tap_offset_d = 512;
-            4'b0100: weight_tap_offset_d = 768;
-            4'b0101: weight_tap_offset_d = 1024;
-            4'b0110: weight_tap_offset_d = 1280;
-            4'b1000: weight_tap_offset_d = 1536;
-            4'b1001: weight_tap_offset_d = 1792;
-            4'b1010: weight_tap_offset_d = 2048;
-            default: weight_tap_offset_d = '0;
+            4'b0000: weight_tap_index_d = 4'd0;
+            4'b0001: weight_tap_index_d = 4'd1;
+            4'b0010: weight_tap_index_d = 4'd2;
+            4'b0100: weight_tap_index_d = 4'd3;
+            4'b0101: weight_tap_index_d = 4'd4;
+            4'b0110: weight_tap_index_d = 4'd5;
+            4'b1000: weight_tap_index_d = 4'd6;
+            4'b1001: weight_tap_index_d = 4'd7;
+            4'b1010: weight_tap_index_d = 4'd8;
+            default: weight_tap_index_d = 4'd0;
         endcase
     end
 
-    assign weight_start_addr_d = weight_base_i + weight_tap_offset_d +
-                                 (cin_block_i  ? WEIGHT_CIN_BLOCK_STEP  : '0) +
-                                 (cout_block_i ? WEIGHT_COUT_BLOCK_STEP : '0) +
-                                 WEIGHT_FIRST_COLUMN;
+    // offset = tap*256 + cin_block*128 + cout_block*8 + 7.  These fields do
+    // not overlap, so concatenation avoids a tree of full-width adders.
+    assign weight_start_offset_d = {
+        {(SRC_ADDR_WIDTH-12){1'b0}}, weight_tap_index_d,
+        cin_block_i, 3'b000, cout_block_i, 3'b111
+    };
+    assign weight_start_addr_d = weight_base_i + weight_start_offset_d;
 
     // The four supported tiles are all boundary tiles of the 32x32 image.
     assign pad_y = ((!tile_y_q) && (local_y_q == 0)) ||
@@ -181,7 +177,9 @@ module conv3x3_hwc_channel_dma_agu #(
     assign load_valid_o        = (state_q == STATE_LOAD);
     assign load_is_weight_o    = mode_weight_q;
     assign load_zero_fill_o    = load_valid_o && !mode_weight_q && (pad_y || pad_x);
-    assign load_src_addr_o     = load_zero_fill_o ? '0 : src_addr_q;
+    // The downstream contract already requires this address to be ignored for
+    // zero-fill commands, so do not spend 32 LUT inputs forcing it to zero.
+    assign load_src_addr_o     = src_addr_q;
     assign load_src_lane_stride_o = mode_weight_q ? 5'd16 : 5'd1;
     assign load_dst_addr_o     = mode_weight_q ? {{(ACT_ADDR_WIDTH-3){1'b0}}, weight_shift_q}
                                                 : linear_q;
@@ -201,6 +199,7 @@ module conv3x3_hwc_channel_dma_agu #(
             local_x_q   <= '0;
             weight_shift_q <= '0;
             src_addr_q  <= '0;
+            row_end_q   <= 1'b0;
             tile_y_q    <= 1'b0;
             tile_x_q    <= 1'b0;
         end else begin
@@ -214,12 +213,13 @@ module conv3x3_hwc_channel_dma_agu #(
                     local_y_q     <= '0;
                     local_x_q     <= '0;
                     weight_shift_q <= '0;
+                    row_end_q      <= 1'b0;
                     tile_y_q      <= tile_y_i;
                     tile_x_q      <= tile_x_i;
                     if (load_weight_i) begin
                         src_addr_q <= weight_start_addr_d;
                     end else begin
-                        src_addr_q <= image_base_i + origin_offset_d + channel_offset_d;
+                        src_addr_q <= image_base_i + activation_start_offset_d;
                     end
                 end
             end else if (state_q == STATE_LOAD) begin
@@ -239,13 +239,20 @@ module conv3x3_hwc_channel_dma_agu #(
                         end else begin
                             linear_q <= linear_q + 1'b1;
 
-                            if (local_x_q == LAST_COORD) begin
+                            // Register the row-end decision one command early.
+                            // It now drives the 32-bit incrementer directly,
+                            // instead of a coordinate comparator feeding it on
+                            // the same critical path.
+                            src_addr_q <= src_addr_q +
+                                          (row_end_q ? ROW_STEP : PIXEL_STEP);
+
+                            if (row_end_q) begin
                                 local_x_q  <= '0;
                                 local_y_q  <= local_y_q + 1'b1;
-                                src_addr_q <= src_addr_q + ROW_STEP;
+                                row_end_q   <= 1'b0;
                             end else begin
                                 local_x_q  <= local_x_q + 1'b1;
-                                src_addr_q <= src_addr_q + PIXEL_STEP;
+                                row_end_q   <= (local_x_q == ROW_END_ARM_COORD);
                             end
                         end
                     end
