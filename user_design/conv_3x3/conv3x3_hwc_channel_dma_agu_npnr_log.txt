@@ -1,0 +1,211 @@
+Info: Detected FABulous 2.0 format project.
+Info: Reading BELs file: /.FABulous/bel.v3.txt
+Info: Reading PIPs file: /.FABulous/pips.txt
+
+Info: No PCF file specified, skipping constraints application.
+Info: Checksum: 0x038a0ba9
+
+Info: Device utilisation:
+Info: 	         FABULOUS_LC:     584/    800    73%
+Info: 	IO_1_bidirectional_frame_config_pass:      20/     20   100%
+Info: 	        Global_Clock:       1/      1   100%
+Info: 	       FABULOUS_MUX2:       0/    400     0%
+Info: 	       FABULOUS_MUX4:       0/    200     0%
+Info: 	       FABULOUS_MUX8:       0/    100     0%
+Info: 	       Config_access:       0/     20     0%
+Info: 	           AXI_M_BEL:       0/      1     0%
+Info: 	          AXIL_S_BEL:       1/      1   100%
+
+Info: Placed 21 cells based on constraints.
+Info: Creating initial analytic placement for 587 cells, random placement wirelen = 6299.
+Info:     at initial placer iter 0, wirelen = 336
+Info:     at initial placer iter 1, wirelen = 329
+Info:     at initial placer iter 2, wirelen = 331
+Info:     at initial placer iter 3, wirelen = 331
+Info: Running main analytical placer, max placement attempts per cell = 46208.
+Info:     at iteration #1, type ALL: wirelen solved = 333, spread = 3113, legal = 3113; time = 0.01s
+Info:     at iteration #2, type ALL: wirelen solved = 529, spread = 2560, legal = 2560; time = 0.01s
+Info:     at iteration #3, type ALL: wirelen solved = 802, spread = 2123, legal = 2123; time = 0.01s
+Info:     at iteration #4, type ALL: wirelen solved = 1004, spread = 1748, legal = 1748; time = 0.01s
+Info:     at iteration #5, type ALL: wirelen solved = 1111, spread = 1627, legal = 1627; time = 0.01s
+Info:     at iteration #6, type ALL: wirelen solved = 1164, spread = 1570, legal = 1570; time = 0.01s
+Info:     at iteration #7, type ALL: wirelen solved = 1200, spread = 1617, legal = 1617; time = 0.01s
+Info:     at iteration #8, type ALL: wirelen solved = 1315, spread = 1601, legal = 1601; time = 0.01s
+Info: HeAP Placer Time: 0.08s
+Info:   of which solving equations: 0.06s
+Info:   of which spreading cells: 0.01s
+Info:   of which strict legalisation: 0.00s
+
+Info: Running simulated annealing placer for refinement.
+Info:   at iteration #1: temp = 0.000000, timing cost = 677, wirelen = 1570
+Info:   at iteration #5: temp = 0.000000, timing cost = 584, wirelen = 1431
+Info:   at iteration #5: temp = 0.000000, timing cost = 569, wirelen = 1431 
+Info: SA placement time 0.08s
+
+Info: Max frequency for clock 'clk': 7.22 MHz (FAIL at 12.00 MHz)
+
+Info: Slack histogram:
+Info:  legend: * represents 3 endpoint(s)
+Info:          + represents [1,3) endpoint(s)
+Info: [-55166, -48566) |*+
+Info: [-48566, -41966) |+
+Info: [-41966, -35366) |+
+Info: [-35366, -28766) |+
+Info: [-28766, -22166) |+
+Info: [-22166, -15566) |+
+Info: [-15566,  -8966) |**+
+Info: [ -8966,  -2366) |*****+
+Info: [ -2366,   4234) |******+
+Info: [  4234,  10834) |******************+
+Info: [ 10834,  17434) |***+
+Info: [ 17434,  24034) |****+
+Info: [ 24034,  30634) |******+
+Info: [ 30634,  37234) |******+
+Info: [ 37234,  43834) |******+
+Info: [ 43834,  50434) |*****+
+Info: [ 50434,  57034) |******+
+Info: [ 57034,  63634) |****+
+Info: [ 63634,  70234) |***+
+Info: [ 70234,  76834) |************************************************************ 
+Info: Checksum: 0x0309f55f
+
+Info: Routing..
+Info: Setting up routing queue.
+Info: Routing 2268 arcs.
+Info:            |   (re-)routed arcs  |   delta    | remaining|       time spent     |
+Info:    IterCnt |  w/ripup   wo/ripup |  w/r  wo/r |      arcs| batch(sec) total(sec)|
+Info:       1000 |      377        622 |  377   622 |      1751|       0.10       0.10|
+Info:       2000 |      904       1095 |  527   473 |      1440|       0.11       0.21|
+Info:       3000 |     1569       1430 |  665   335 |      1254|       0.11       0.32|
+Info:       4000 |     2228       1771 |  659   341 |      1052|       0.11       0.43|
+Info:       5000 |     2812       2187 |  584   416 |       762|       0.11       0.54|
+Info:       6000 |     3541       2458 |  729   271 |       671|       0.12       0.66|
+Info:       7000 |     4181       2818 |  640   360 |       518|       0.14       0.80|
+Info:       8000 |     4843       3156 |  662   338 |       321|       0.16       0.97|
+Info:       9000 |     5576       3423 |  733   267 |       250|       0.14       1.11|
+Info:      10000 |     6354       3645 |  778   222 |       190|       0.14       1.25|
+Info:      11000 |     7121       3878 |  767   233 |       167|       0.15       1.40|
+Info:      12000 |     7882       4117 |  761   239 |       116|       0.17       1.57|
+Info:      13000 |     8648       4351 |  766   234 |        80|       0.15       1.73|
+Info:      14000 |     9447       4552 |  799   201 |        67|       0.21       1.93|
+Info:      15000 |    10199       4800 |  752   248 |        40|       0.20       2.13|
+Info:      16000 |    10996       5003 |  797   203 |        31|       0.20       2.33|
+Info:      16596 |    11431       5165 |  435   162 |         0|       0.15       2.49|
+Info: Routing complete.
+Info: Router1 time 2.49s
+Info: Checksum: 0xe909cde1
+
+Info: Critical path report for clock 'clk' (posedge -> posedge):
+Info:       type curr  total name
+Info:   clk-to-q  1.00  1.00 Source $abc$5695$auto$blifparse.cc:557:parse_blif$5747.Q
+Info:    routing  3.90  4.90 Net user_logic.source_base_reg[3] (8,3) -> (7,3)
+Info:                          Sink $abc$5695$auto$blifparse.cc:557:parse_blif$5899.I1
+Info:                          Defined in:
+Info:                               /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/conv_3x3/dma_AXI_wrapper_3x3.v:84.16-84.31
+Info:      logic  3.00  7.90 Source $abc$5695$auto$blifparse.cc:557:parse_blif$5899.O
+Info:    routing  2.90  10.80 Net $abc$5695$auto$alumacc.cc:512:replace_alu$710.CO[2]_new_inv (7,3) -> (7,4)
+Info:                          Sink $abc$5695$auto$blifparse.cc:557:parse_blif$5913.I2
+Info:                          Defined in:
+Info:                               /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/conv_3x3/conv3x3_hwc_channel_dma_agu.sv:222.39-222.79
+Info:                               /nix/store/6s5yppv17pwkdm7m8rsrm6hvpf255c5a-yosys-with-plugins-0.62/bin/../share/yosys/techmap.v:274.23-274.25
+Info:      logic  3.00  13.80 Source $abc$5695$auto$blifparse.cc:557:parse_blif$5913.O
+Info:    routing  2.10  15.90 Net $abc$5695$auto$alumacc.cc:512:replace_alu$710.CO[4]_new_inv (7,4) -> (7,4)
+Info:                          Sink $abc$5695$auto$blifparse.cc:557:parse_blif$5926.I2
+Info:                          Defined in:
+Info:                               /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/conv_3x3/conv3x3_hwc_channel_dma_agu.sv:222.39-222.79
+Info:                               /nix/store/6s5yppv17pwkdm7m8rsrm6hvpf255c5a-yosys-with-plugins-0.62/bin/../share/yosys/techmap.v:274.23-274.25
+Info:      logic  3.00  18.90 Source $abc$5695$auto$blifparse.cc:557:parse_blif$5926.O
+Info:    routing  4.50  23.40 Net $abc$5695$auto$alumacc.cc:512:replace_alu$710.CO[6]_new_inv (7,4) -> (6,5)
+Info:                          Sink $abc$5695$auto$blifparse.cc:557:parse_blif$5933.I1
+Info:                          Defined in:
+Info:                               /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/conv_3x3/conv3x3_hwc_channel_dma_agu.sv:222.39-222.79
+Info:                               /nix/store/6s5yppv17pwkdm7m8rsrm6hvpf255c5a-yosys-with-plugins-0.62/bin/../share/yosys/techmap.v:274.23-274.25
+Info:      logic  3.00  26.40 Source $abc$5695$auto$blifparse.cc:557:parse_blif$5933.O
+Info:    routing  2.10  28.50 Net $abc$5695$auto$alumacc.cc:512:replace_alu$710.CO[7]_new_inv (6,5) -> (6,5)
+Info:                          Sink $abc$5695$auto$blifparse.cc:557:parse_blif$5947.I2
+Info:                          Defined in:
+Info:                               /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/conv_3x3/conv3x3_hwc_channel_dma_agu.sv:222.39-222.79
+Info:                               /nix/store/6s5yppv17pwkdm7m8rsrm6hvpf255c5a-yosys-with-plugins-0.62/bin/../share/yosys/techmap.v:274.23-274.25
+Info:      logic  3.00  31.50 Source $abc$5695$auto$blifparse.cc:557:parse_blif$5947.O
+Info:    routing  3.70  35.20 Net $abc$5695$auto$alumacc.cc:512:replace_alu$710.CO[9]_new_inv (6,5) -> (5,6)
+Info:                          Sink $abc$5695$auto$blifparse.cc:557:parse_blif$5959.I2
+Info:                          Defined in:
+Info:                               /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/conv_3x3/conv3x3_hwc_channel_dma_agu.sv:222.39-222.79
+Info:                               /nix/store/6s5yppv17pwkdm7m8rsrm6hvpf255c5a-yosys-with-plugins-0.62/bin/../share/yosys/techmap.v:274.23-274.25
+Info:      logic  3.00  38.20 Source $abc$5695$auto$blifparse.cc:557:parse_blif$5959.O
+Info:    routing  3.70  41.90 Net $abc$5695$auto$alumacc.cc:512:replace_alu$710.CO[11]_new_inv (5,6) -> (5,8)
+Info:                          Sink $abc$5695$auto$blifparse.cc:557:parse_blif$5986.I0
+Info:                          Defined in:
+Info:                               /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/conv_3x3/conv3x3_hwc_channel_dma_agu.sv:222.39-222.79
+Info:                               /nix/store/6s5yppv17pwkdm7m8rsrm6hvpf255c5a-yosys-with-plugins-0.62/bin/../share/yosys/techmap.v:274.23-274.25
+Info:      logic  3.00  44.90 Source $abc$5695$auto$blifparse.cc:557:parse_blif$5986.O
+Info:    routing  2.10  47.00 Net $abc$5695$new_n795 (5,8) -> (5,8)
+Info:                          Sink $abc$5695$auto$blifparse.cc:557:parse_blif$6250.I0
+Info:      logic  3.00  50.00 Source $abc$5695$auto$blifparse.cc:557:parse_blif$6250.O
+Info:    routing  7.70  57.70 Net $abc$5695$auto$alumacc.cc:512:replace_alu$710.CO[15]_new_inv (5,8) -> (2,8)
+Info:                          Sink $abc$5695$auto$blifparse.cc:557:parse_blif$6251.I2
+Info:                          Defined in:
+Info:                               /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/conv_3x3/conv3x3_hwc_channel_dma_agu.sv:222.39-222.79
+Info:                               /nix/store/6s5yppv17pwkdm7m8rsrm6hvpf255c5a-yosys-with-plugins-0.62/bin/../share/yosys/techmap.v:274.23-274.25
+Info:      logic  3.00  60.70 Source $abc$5695$auto$blifparse.cc:557:parse_blif$6251.O
+Info:    routing  2.90  63.60 Net $abc$5695$auto$alumacc.cc:512:replace_alu$710.CO[19]_new_inv (2,8) -> (2,9)
+Info:                          Sink $abc$5695$auto$blifparse.cc:557:parse_blif$6041.I0
+Info:                          Defined in:
+Info:                               /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/conv_3x3/conv3x3_hwc_channel_dma_agu.sv:222.39-222.79
+Info:                               /nix/store/6s5yppv17pwkdm7m8rsrm6hvpf255c5a-yosys-with-plugins-0.62/bin/../share/yosys/techmap.v:274.23-274.25
+Info:      logic  3.00  66.60 Source $abc$5695$auto$blifparse.cc:557:parse_blif$6041.O
+Info:    routing  2.10  68.70 Net $abc$5695$techmap$auto$alumacc.cc:512:replace_alu$710.lcu.$and$/nix/store/6s5yppv17pwkdm7m8rsrm6hvpf255c5a-yosys-with-plugins-0.62/bin/../share/yosys/techmap.v:248$2666_Y_new (2,9) -> (2,9)
+Info:                          Sink $abc$5695$auto$blifparse.cc:557:parse_blif$6056.I2
+Info:                          Defined in:
+Info:                               /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/conv_3x3/conv3x3_hwc_channel_dma_agu.sv:222.39-222.79
+Info:                               /nix/store/6s5yppv17pwkdm7m8rsrm6hvpf255c5a-yosys-with-plugins-0.62/bin/../share/yosys/techmap.v:293.27-293.63
+Info:                               /nix/store/6s5yppv17pwkdm7m8rsrm6hvpf255c5a-yosys-with-plugins-0.62/bin/../share/yosys/techmap.v:248.19-248.41
+Info:      logic  3.00  71.70 Source $abc$5695$auto$blifparse.cc:557:parse_blif$6056.O
+Info:    routing  2.90  74.60 Net $abc$5695$auto$alumacc.cc:512:replace_alu$710.CO[25]_new_inv (2,9) -> (2,10)
+Info:                          Sink $abc$5695$auto$blifparse.cc:557:parse_blif$6057.I0
+Info:                          Defined in:
+Info:                               /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/conv_3x3/conv3x3_hwc_channel_dma_agu.sv:222.39-222.79
+Info:                               /nix/store/6s5yppv17pwkdm7m8rsrm6hvpf255c5a-yosys-with-plugins-0.62/bin/../share/yosys/techmap.v:274.23-274.25
+Info:      logic  3.00  77.60 Source $abc$5695$auto$blifparse.cc:557:parse_blif$6057.O
+Info:    routing  2.10  79.70 Net $abc$5695$auto$alumacc.cc:512:replace_alu$710.Y[27]_new_inv (2,10) -> (2,10)
+Info:                          Sink $abc$5695$auto$blifparse.cc:557:parse_blif$6268.I0
+Info:                          Defined in:
+Info:                               /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/conv_3x3/conv3x3_hwc_channel_dma_agu.sv:222.39-222.79
+Info:                               /nix/store/6s5yppv17pwkdm7m8rsrm6hvpf255c5a-yosys-with-plugins-0.62/bin/../share/yosys/techmap.v:270.26-270.27
+Info:      logic  3.00  82.70 Source $abc$5695$auto$blifparse.cc:557:parse_blif$6268.O
+Info:    routing  2.90  85.60 Net $abc$5695$flatten\user_logic.\agu_i.$procmux$209_Y[30]_new (2,10) -> (1,10)
+Info:                          Sink $abc$5695$auto$blifparse.cc:557:parse_blif$6270.I0
+Info:      logic  3.00  88.60 Source $abc$5695$auto$blifparse.cc:557:parse_blif$6270.O
+Info:    routing  2.10  90.70 Net $abc$5695$auto$rtlil.cc:3583:MuxGate$5267_new (1,10) -> (1,10)
+Info:                          Sink $abc$5695$auto$blifparse.cc:557:parse_blif$6271.I0
+Info:      setup  2.50  93.20 Source $abc$5695$auto$blifparse.cc:557:parse_blif$6271.I0
+Info: 45.50 ns logic, 47.70 ns routing
+
+ERROR: Max frequency for clock 'clk': 10.73 MHz (FAIL at 12.00 MHz)
+
+Info: Slack histogram:
+Info:  legend: * represents 3 endpoint(s)
+Info:          + represents [1,3) endpoint(s)
+Info: [ -9866,  -5536) |*+
+Info: [ -5536,  -1206) |**+
+Info: [ -1206,   3124) |+
+Info: [  3124,   7454) |+
+Info: [  7454,  11784) |+
+Info: [ 11784,  16114) |+
+Info: [ 16114,  20444) |+
+Info: [ 20444,  24774) |*+
+Info: [ 24774,  29104) |*+
+Info: [ 29104,  33434) |*+
+Info: [ 33434,  37764) |***************+
+Info: [ 37764,  42094) |*********+
+Info: [ 42094,  46424) |****+
+Info: [ 46424,  50754) |***+
+Info: [ 50754,  55084) |*****+
+Info: [ 55084,  59414) |**************+
+Info: [ 59414,  63744) |***************+
+Info: [ 63744,  68074) |**************+
+Info: [ 68074,  72404) |**************+
+Info: [ 72404,  76734) |************************************************************ 
+0 warnings, 1 error
+
+Info: Program finished normally.

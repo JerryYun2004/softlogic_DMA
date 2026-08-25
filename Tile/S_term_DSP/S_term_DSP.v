@@ -8,16 +8,16 @@ module S_term_DSP
     )
     (
  //N
-        output  [3:0] N1BEG,        //Port(Name=N1BEG,IO=OUTPUT,XOffset=0,YOffset=-1,WireCount=4,Side=N)
-        output  [7:0] N2BEG,        //Port(Name=N2BEG,IO=OUTPUT,XOffset=0,YOffset=-1,WireCount=8,Side=N)
-        output  [7:0] N2BEGb,        //Port(Name=N2BEGb,IO=OUTPUT,XOffset=0,YOffset=-1,WireCount=8,Side=N)
-        output  [15:0] N4BEG,        //Port(Name=N4BEG,IO=OUTPUT,XOffset=0,YOffset=-4,WireCount=4,Side=N)
-        output  [15:0] NN4BEG,        //Port(Name=NN4BEG,IO=OUTPUT,XOffset=0,YOffset=-4,WireCount=4,Side=N)
-        input  [3:0] S1END,        //Port(Name=S1END,IO=INPUT,XOffset=0,YOffset=1,WireCount=4,Side=N)
-        input  [7:0] S2MID,        //Port(Name=S2MID,IO=INPUT,XOffset=0,YOffset=1,WireCount=8,Side=N)
-        input  [7:0] S2END,        //Port(Name=S2END,IO=INPUT,XOffset=0,YOffset=1,WireCount=8,Side=N)
-        input  [15:0] S4END,        //Port(Name=S4END,IO=INPUT,XOffset=0,YOffset=4,WireCount=4,Side=N)
-        input  [15:0] SS4END,        //Port(Name=SS4END,IO=INPUT,XOffset=0,YOffset=4,WireCount=4,Side=N)
+        output  [3:0] N1BEG,        //TilePort({N} OUTPUT N1BEG[3:0])
+        output  [7:0] N2BEG,        //TilePort({N} OUTPUT N2BEG[7:0])
+        output  [7:0] N2BEGb,        //TilePort({N} OUTPUT N2BEGb[7:0])
+        output  [15:0] N4BEG,        //TilePort({N} OUTPUT N4BEG[3:0])
+        output  [15:0] NN4BEG,        //TilePort({N} OUTPUT NN4BEG[3:0])
+        input  [3:0] S1END,        //TilePort({N} INPUT S1END[3:0])
+        input  [7:0] S2MID,        //TilePort({N} INPUT S2MID[7:0])
+        input  [7:0] S2END,        //TilePort({N} INPUT S2END[7:0])
+        input  [15:0] S4END,        //TilePort({N} INPUT S4END[3:0])
+        input  [15:0] SS4END,        //TilePort({N} INPUT SS4END[3:0])
     //Tile IO ports from BELs
         input  UserCLK,
         output  UserCLKo,

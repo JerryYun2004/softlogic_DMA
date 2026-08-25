@@ -9,16 +9,16 @@ module W_IO
     )
     (
  //E
-        output  [3:0] E1BEG,        //Port(Name=E1BEG,IO=OUTPUT,XOffset=1,YOffset=0,WireCount=4,Side=E)
-        output  [7:0] E2BEG,        //Port(Name=E2BEG,IO=OUTPUT,XOffset=1,YOffset=0,WireCount=8,Side=E)
-        output  [7:0] E2BEGb,        //Port(Name=E2BEGb,IO=OUTPUT,XOffset=1,YOffset=0,WireCount=8,Side=E)
-        output  [15:0] EE4BEG,        //Port(Name=EE4BEG,IO=OUTPUT,XOffset=4,YOffset=0,WireCount=4,Side=E)
-        output  [11:0] E6BEG,        //Port(Name=E6BEG,IO=OUTPUT,XOffset=6,YOffset=0,WireCount=2,Side=E)
-        input  [3:0] W1END,        //Port(Name=W1END,IO=INPUT,XOffset=-1,YOffset=0,WireCount=4,Side=E)
-        input  [7:0] W2MID,        //Port(Name=W2MID,IO=INPUT,XOffset=-1,YOffset=0,WireCount=8,Side=E)
-        input  [7:0] W2END,        //Port(Name=W2END,IO=INPUT,XOffset=-1,YOffset=0,WireCount=8,Side=E)
-        input  [15:0] WW4END,        //Port(Name=WW4END,IO=INPUT,XOffset=-4,YOffset=0,WireCount=4,Side=E)
-        input  [11:0] W6END,        //Port(Name=W6END,IO=INPUT,XOffset=-6,YOffset=0,WireCount=2,Side=E)
+        output  [3:0] E1BEG,        //TilePort({E} OUTPUT E1BEG[3:0])
+        output  [7:0] E2BEG,        //TilePort({E} OUTPUT E2BEG[7:0])
+        output  [7:0] E2BEGb,        //TilePort({E} OUTPUT E2BEGb[7:0])
+        output  [15:0] EE4BEG,        //TilePort({E} OUTPUT EE4BEG[3:0])
+        output  [11:0] E6BEG,        //TilePort({E} OUTPUT E6BEG[1:0])
+        input  [3:0] W1END,        //TilePort({E} INPUT W1END[3:0])
+        input  [7:0] W2MID,        //TilePort({E} INPUT W2MID[7:0])
+        input  [7:0] W2END,        //TilePort({E} INPUT W2END[7:0])
+        input  [15:0] WW4END,        //TilePort({E} INPUT WW4END[3:0])
+        input  [11:0] W6END,        //TilePort({E} INPUT W6END[1:0])
         input  A_O_top,
         output  A_I_top,
         output  A_T_top,

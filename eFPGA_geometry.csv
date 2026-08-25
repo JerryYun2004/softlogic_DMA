@@ -9,16 +9,16 @@ Lines,91324
 
 FABRIC_DEF
 Null,N_term_single,N_term_single,N_term_single,N_term_single,N_term_single,N_term_single,N_term_single,N_term_single,N_term_single,N_term_single,N_term_RAM_IO
-W_IO,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,AXI_M_IO_5
-W_IO,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,AXI_M_IO_4
-W_IO,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,AXI_M_IO_3
-W_IO,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,AXI_M_IO_2
-W_IO,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,AXI_M_IO_1
-W_IO,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,AXI_M_IO_0
-W_IO,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,AXIL_S_IO_3
-W_IO,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,AXIL_S_IO_2
-W_IO,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,AXIL_S_IO_1
-W_IO,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,AXIL_S_IO_0
+W_IO,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,AXI_M_IO_E_5
+W_IO,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,AXI_M_IO_E_4
+W_IO,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,AXI_M_IO_E_3
+W_IO,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,AXI_M_IO_E_2
+W_IO,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,AXI_M_IO_E_1
+W_IO,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,AXI_M_IO_E_0
+W_IO,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,AXIL_S_IO_E_3
+W_IO,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,AXIL_S_IO_E_2
+W_IO,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,AXIL_S_IO_E_1
+W_IO,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,LUT4AB,AXIL_S_IO_E_0
 Null,S_term_single,S_term_single,S_term_single,S_term_single,S_term_single,S_term_single,S_term_single,S_term_single,S_term_single,S_term_single,S_term_RAM_IO
 
 FABRIC_LOCS
@@ -37,14 +37,14 @@ Null,176/3345,497/3345,818/3345,1139/3345,1460/3345,1781/3345,2102/3345,2423/334
 
 
 TILE
-Name,AXIL_S_IO_0
+Name,AXIL_S_IO_E_0
 Width,248
 Height,320
 
 SWITCH_MATRIX
-Name,AXIL_S_IO_0_switch_matrix
-Src,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_IO_0/AXIL_S_IO_0_switch_matrix.v
-Csv,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_IO_0/AXIL_S_IO_0_switch_matrix.list
+Name,AXIL_S_IO_E_0_switch_matrix
+Src,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO_E/AXIL_S_IO_E_0/AXIL_S_IO_E_0_switch_matrix.v
+Csv,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO_E/AXIL_S_IO_E_0/AXIL_S_IO_E_0_switch_matrix.list
 RelX,88
 RelY,72
 Width,112
@@ -2644,7 +2644,7 @@ RelY,109
 
 BEL
 Name,AXIL_S_BEL
-Src,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_BEL.v
+Src,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO_E/AXIL_S_BEL.v
 RelX,208
 RelY,76
 Width,32
@@ -6989,14 +6989,14 @@ RelX,24
 RelY,320
 
 TILE
-Name,AXIL_S_IO_1
+Name,AXIL_S_IO_E_1
 Width,248
 Height,320
 
 SWITCH_MATRIX
-Name,AXIL_S_IO_1_switch_matrix
-Src,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_IO_1/AXIL_S_IO_1_switch_matrix.v
-Csv,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_IO_1/AXIL_S_IO_1_switch_matrix.list
+Name,AXIL_S_IO_E_1_switch_matrix
+Src,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO_E/AXIL_S_IO_E_1/AXIL_S_IO_E_1_switch_matrix.v
+Csv,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO_E/AXIL_S_IO_E_1/AXIL_S_IO_E_1_switch_matrix.list
 RelX,88
 RelY,72
 Width,112
@@ -10771,14 +10771,14 @@ RelX,24
 RelY,320
 
 TILE
-Name,AXIL_S_IO_2
+Name,AXIL_S_IO_E_2
 Width,248
 Height,320
 
 SWITCH_MATRIX
-Name,AXIL_S_IO_2_switch_matrix
-Src,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_IO_2/AXIL_S_IO_2_switch_matrix.v
-Csv,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_IO_2/AXIL_S_IO_2_switch_matrix.list
+Name,AXIL_S_IO_E_2_switch_matrix
+Src,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO_E/AXIL_S_IO_E_2/AXIL_S_IO_E_2_switch_matrix.v
+Csv,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO_E/AXIL_S_IO_E_2/AXIL_S_IO_E_2_switch_matrix.list
 RelX,88
 RelY,72
 Width,112
@@ -14553,14 +14553,14 @@ RelX,24
 RelY,320
 
 TILE
-Name,AXIL_S_IO_3
+Name,AXIL_S_IO_E_3
 Width,248
 Height,320
 
 SWITCH_MATRIX
-Name,AXIL_S_IO_3_switch_matrix
-Src,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_IO_3/AXIL_S_IO_3_switch_matrix.v
-Csv,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO/AXIL_S_IO_3/AXIL_S_IO_3_switch_matrix.list
+Name,AXIL_S_IO_E_3_switch_matrix
+Src,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO_E/AXIL_S_IO_E_3/AXIL_S_IO_E_3_switch_matrix.v
+Csv,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXIL_S_IO_E/AXIL_S_IO_E_3/AXIL_S_IO_E_3_switch_matrix.list
 RelX,88
 RelY,72
 Width,112
@@ -18335,14 +18335,14 @@ RelX,24
 RelY,320
 
 TILE
-Name,AXI_M_IO_0
+Name,AXI_M_IO_E_0
 Width,248
 Height,320
 
 SWITCH_MATRIX
-Name,AXI_M_IO_0_switch_matrix
-Src,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXI_M_IO/AXI_M_IO_0/AXI_M_IO_0_switch_matrix.v
-Csv,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXI_M_IO/AXI_M_IO_0/AXI_M_IO_0_switch_matrix.list
+Name,AXI_M_IO_E_0_switch_matrix
+Src,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXI_M_IO_E/AXI_M_IO_E_0/AXI_M_IO_E_0_switch_matrix.v
+Csv,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXI_M_IO_E/AXI_M_IO_E_0/AXI_M_IO_E_0_switch_matrix.list
 RelX,88
 RelY,18
 Width,112
@@ -21518,7 +21518,7 @@ RelY,181
 
 BEL
 Name,AXI_M_BEL
-Src,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXI_M_IO/AXI_M_BEL.v
+Src,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXI_M_IO_E/AXI_M_BEL.v
 RelX,208
 RelY,22
 Width,32
@@ -27519,14 +27519,14 @@ RelX,24
 RelY,320
 
 TILE
-Name,AXI_M_IO_1
+Name,AXI_M_IO_E_1
 Width,248
 Height,320
 
 SWITCH_MATRIX
-Name,AXI_M_IO_1_switch_matrix
-Src,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXI_M_IO/AXI_M_IO_1/AXI_M_IO_1_switch_matrix.v
-Csv,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXI_M_IO/AXI_M_IO_1/AXI_M_IO_1_switch_matrix.list
+Name,AXI_M_IO_E_1_switch_matrix
+Src,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXI_M_IO_E/AXI_M_IO_E_1/AXI_M_IO_E_1_switch_matrix.v
+Csv,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXI_M_IO_E/AXI_M_IO_E_1/AXI_M_IO_E_1_switch_matrix.list
 RelX,88
 RelY,72
 Width,112
@@ -31301,14 +31301,14 @@ RelX,24
 RelY,320
 
 TILE
-Name,AXI_M_IO_2
+Name,AXI_M_IO_E_2
 Width,248
 Height,320
 
 SWITCH_MATRIX
-Name,AXI_M_IO_2_switch_matrix
-Src,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXI_M_IO/AXI_M_IO_2/AXI_M_IO_2_switch_matrix.v
-Csv,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXI_M_IO/AXI_M_IO_2/AXI_M_IO_2_switch_matrix.list
+Name,AXI_M_IO_E_2_switch_matrix
+Src,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXI_M_IO_E/AXI_M_IO_E_2/AXI_M_IO_E_2_switch_matrix.v
+Csv,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXI_M_IO_E/AXI_M_IO_E_2/AXI_M_IO_E_2_switch_matrix.list
 RelX,88
 RelY,72
 Width,112
@@ -35083,14 +35083,14 @@ RelX,24
 RelY,320
 
 TILE
-Name,AXI_M_IO_3
+Name,AXI_M_IO_E_3
 Width,248
 Height,320
 
 SWITCH_MATRIX
-Name,AXI_M_IO_3_switch_matrix
-Src,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXI_M_IO/AXI_M_IO_3/AXI_M_IO_3_switch_matrix.v
-Csv,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXI_M_IO/AXI_M_IO_3/AXI_M_IO_3_switch_matrix.list
+Name,AXI_M_IO_E_3_switch_matrix
+Src,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXI_M_IO_E/AXI_M_IO_E_3/AXI_M_IO_E_3_switch_matrix.v
+Csv,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXI_M_IO_E/AXI_M_IO_E_3/AXI_M_IO_E_3_switch_matrix.list
 RelX,88
 RelY,72
 Width,112
@@ -38865,14 +38865,14 @@ RelX,24
 RelY,320
 
 TILE
-Name,AXI_M_IO_4
+Name,AXI_M_IO_E_4
 Width,248
 Height,320
 
 SWITCH_MATRIX
-Name,AXI_M_IO_4_switch_matrix
-Src,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXI_M_IO/AXI_M_IO_4/AXI_M_IO_4_switch_matrix.v
-Csv,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXI_M_IO/AXI_M_IO_4/AXI_M_IO_4_switch_matrix.list
+Name,AXI_M_IO_E_4_switch_matrix
+Src,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXI_M_IO_E/AXI_M_IO_E_4/AXI_M_IO_E_4_switch_matrix.v
+Csv,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXI_M_IO_E/AXI_M_IO_E_4/AXI_M_IO_E_4_switch_matrix.list
 RelX,88
 RelY,72
 Width,112
@@ -42647,14 +42647,14 @@ RelX,24
 RelY,320
 
 TILE
-Name,AXI_M_IO_5
+Name,AXI_M_IO_E_5
 Width,248
 Height,320
 
 SWITCH_MATRIX
-Name,AXI_M_IO_5_switch_matrix
-Src,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXI_M_IO/AXI_M_IO_5/AXI_M_IO_5_switch_matrix.v
-Csv,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXI_M_IO/AXI_M_IO_5/AXI_M_IO_5_switch_matrix.list
+Name,AXI_M_IO_E_5_switch_matrix
+Src,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXI_M_IO_E/AXI_M_IO_E_5/AXI_M_IO_E_5_switch_matrix.v
+Csv,/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Tile/AXI_M_IO_E/AXI_M_IO_E_5/AXI_M_IO_E_5_switch_matrix.list
 RelX,88
 RelY,72
 Width,112

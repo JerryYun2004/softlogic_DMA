@@ -4,7 +4,7 @@
     "LUT4c_frame_config_dffesr": {
       "attributes": {
         "SET_NORESET": 18,
-        "IOmux": 17,
+        "I0mux": 17,
         "FF": 16,
         "INIT_15": 15,
         "INIT_14": 14,

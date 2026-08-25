@@ -4204,7 +4204,7 @@ assign Column_X11_FrameStrobe = FrameStrobe[MaxFramesPerCol*(11+1)-1:MaxFramesPe
 
 
  //tile IO port will get directly connected to top-level tile module
-(* keep *) AXI_M_IO
+(* keep *) AXI_M_IO_E
 `ifdef EMULATION
     #(
     .Tile_X0Y0_Emulate_Bitstream(`Tile_X11Y1_Emulate_Bitstream),
@@ -4215,7 +4215,7 @@ assign Column_X11_FrameStrobe = FrameStrobe[MaxFramesPerCol*(11+1)-1:MaxFramesPe
     .Tile_X0Y5_Emulate_Bitstream(`Tile_X11Y6_Emulate_Bitstream)
     )
 `endif
-    Tile_X11Y1_AXI_M_IO
+    Tile_X11Y1_AXI_M_IO_E
     (
     .Tile_X0Y0_E1END(Tile_X10Y1_E1BEG),
     .Tile_X0Y0_E2MID(Tile_X10Y1_E2BEG),
@@ -8339,7 +8339,7 @@ assign Column_X11_FrameStrobe = FrameStrobe[MaxFramesPerCol*(11+1)-1:MaxFramesPe
 
 
  //tile IO port will get directly connected to top-level tile module
-(* keep *) AXIL_S_IO
+(* keep *) AXIL_S_IO_E
 `ifdef EMULATION
     #(
     .Tile_X0Y0_Emulate_Bitstream(`Tile_X11Y7_Emulate_Bitstream),
@@ -8348,7 +8348,7 @@ assign Column_X11_FrameStrobe = FrameStrobe[MaxFramesPerCol*(11+1)-1:MaxFramesPe
     .Tile_X0Y3_Emulate_Bitstream(`Tile_X11Y10_Emulate_Bitstream)
     )
 `endif
-    Tile_X11Y7_AXIL_S_IO
+    Tile_X11Y7_AXIL_S_IO_E
     (
     .Tile_X0Y0_E1END(Tile_X10Y7_E1BEG),
     .Tile_X0Y0_E2MID(Tile_X10Y7_E2BEG),
