@@ -5,7 +5,7 @@
 //
 //   * axil_* is the CPU-facing AXI4-Lite register slave.
 //   * m_axi_* is a read-only, 32-bit AXI4 master connected to DRAM.
-//   * map_* is the fetched eight-byte destination stream connected to the
+//   * map_* is a direct 32-bit destination stream connected to the
 //     activation-bank / weight-shift adapter.
 //
 // The CPU supplies a pointer to exactly one packed source object:
@@ -20,10 +20,16 @@
 // boundary it is safely split into two bursts. A 64-byte-aligned weight
 // pointer guarantees that the weight slice always uses exactly one burst.
 //
-// Returned R beats are accepted on consecutive cycles whenever the
-// destination is able to keep up. A one-word half-group register plus one
-// complete 64-bit output register decouple the 32-bit AXI stream from the
-// eight-bank adapter. Only one AXI burst is outstanding at a time.
+// Direct 32-bit steering:
+//
+//   beat 0 -> banks 0..3 at one destination address
+//   beat 1 -> banks 4..7 at the same destination address
+//
+// The destination address advances only after beat 1. There is no 64-bit
+// widening/output register and no activation half-word register. AXI R is
+// backpressured directly when the NPU-side owner deasserts map_ready. Only
+// the NPU adapter retains one 32-bit half-word for the existing eight-lane
+// weight-shift interface.
 //
 // AXI4-Lite register map:
 //   0x00 W: packed-object byte pointer and start the selected operation
@@ -76,14 +82,16 @@ module dma_a (
     input  wire        m_axi_rvalid,
     output wire        m_axi_rready,
 
-    // Eight-byte destination stream. Byte lane r maps to bank/PE row r.
-    // map_ready must come from the NPU-side port arbiter: it may be asserted
-    // only when the DMA owns the activation SRAM ports for an activation map,
-    // or the weight-shift port for a weight map. dma_a retains the complete
-    // map and backpressures AXI R while map_ready is low.
+    // Four-byte destination stream. map_bank_mask is 8'h0f on the first beat
+    // of a group and 8'hf0 on the second. Byte lane n in map_data maps to bank
+    // n for the low half and bank n+4 for the high half.
+    //
+    // map_ready must come from the NPU-side port arbiter and may be asserted
+    // only when the DMA owns the destination. With no internal output FIFO,
+    // map_ready directly controls AXI RREADY during a DRAM-backed transfer.
     output wire        map_valid,
     input  wire        map_ready,
-    output wire [63:0] map_data,
+    output wire [31:0] map_data,
     output wire [31:0] map_source_addr,
     output wire [4:0]  map_source_stride,
     output wire [8:0]  map_buffer_addr,
@@ -104,7 +112,6 @@ module dma_a (
     localparam [2:0] FETCH_AR     = 3'd3;
     localparam [2:0] FETCH_R      = 3'd4;
     localparam [2:0] FETCH_SUFFIX = 3'd5;
-    localparam [2:0] FETCH_DRAIN  = 3'd6;
 
     reg [31:0] source_base_reg;
     reg [9:0]  config_reg;
@@ -149,6 +156,8 @@ module dma_a (
     wire [31:0] next_source_base;
     wire [9:0]  next_config;
     wire        invalid_weight_config;
+    wire        invalid_activation_alignment;
+    wire        invalid_weight_alignment;
     wire        invalid_source_alignment;
 
     // Current row/slice descriptor.
@@ -161,7 +170,6 @@ module dma_a (
     reg        command_pad_before_q;
     reg        command_pad_after_q;
     reg        command_is_weight_q;
-    reg        command_zero_fill_q;
     reg        command_last_q;
 
     // AXI burst tracking. row_beats_remaining_q counts all unread beats in
@@ -170,43 +178,64 @@ module dma_a (
     reg [6:0]  row_beats_remaining_q;
     reg [6:0]  burst_beats_left_q;
 
-    // 32-to-64-bit stream assembly and complete-group output register.
-    reg [31:0] half_word_q;
-    reg        half_valid_q;
-    reg [5:0]  group_index_q;
-    reg [63:0] map_data_q;
-    reg [31:0] map_source_addr_q;
-    reg [4:0]  map_source_stride_q;
-    reg [8:0]  map_buffer_addr_q;
-    reg [7:0]  map_bank_mask_q;
-    reg        map_is_weight_q;
-    reg        map_zero_fill_q;
-    reg        map_last_q;
-    reg        map_valid_q;
+    // Direct steering state. beat_high_q=0 selects banks 0..3; one accepted
+    // beat later beat_high_q=1 selects banks 4..7 at the same group address.
+    reg [5:0] group_index_q;
+    reg       beat_high_q;
 
     reg        axi_read_error_pulse;
 
-    wire [31:0] accepted_rdata;
     wire        map_fire;
-    wire        output_slot_available;
     wire        r_fire;
+    wire        descriptor_complete_fire;
     wire [12:0] bytes_to_4k;
     wire [10:0] beats_to_4k;
     wire [10:0] row_beats_wide;
+    wire        row_finishes_before_4k;
     wire [10:0] next_burst_beats;
 
-    function [31:0] apply_wstrb;
-        input [31:0] old_value;
-        input [31:0] new_value;
-        input [3:0]  strb;
-        begin
-            apply_wstrb = old_value;
-            if (strb[0]) apply_wstrb[7:0]   = new_value[7:0];
-            if (strb[1]) apply_wstrb[15:8]  = new_value[15:8];
-            if (strb[2]) apply_wstrb[23:16] = new_value[23:16];
-            if (strb[3]) apply_wstrb[31:24] = new_value[31:24];
+    wire [31:0] axil_status_word;
+    wire [31:0] axil_config_word;
+    wire [31:0] axil_read_mux_data;
+    wire [31:0] axil_read_data;
+    wire [1:0]  axil_read_resp;
+    wire        axil_read_addr_valid;
+
+    wire [8:0]  prefix_buffer_addr;
+    wire [8:0]  indexed_buffer_addr;
+    wire [8:0]  fetched_buffer_addr;
+    wire [8:0]  suffix_buffer_addr;
+    wire [1:0]  map_addr_select;
+
+    wire [31:0] beat_byte_offset;
+    wire [31:0] indexed_source_addr;
+    wire [31:0] suffix_source_addr;
+    wire        map_uses_axi_data;
+    wire [7:0]  low_bank_mask;
+    wire [7:0]  high_bank_mask;
+
+    // These are ordinary RTL choices. FABulous cascade-mux BELs cannot be
+    // driven directly from registers or I/O signals; nextpnr requires each
+    // data input of FABULOUS_MUX2/4/8 to be a LUT O output in the same cluster.
+    assign write_addr = aw_hold_valid ? awaddr_hold : axil_awaddr;
+    assign write_data = w_hold_valid  ? wdata_hold  : axil_wdata;
+    assign write_strb = w_hold_valid  ? wstrb_hold  : axil_wstrb;
+
+    genvar byte_index;
+    generate
+        for (byte_index = 0; byte_index < 4;
+             byte_index = byte_index + 1) begin : gen_source_wstrb_mux
+            assign next_source_base[byte_index*8 +: 8] =
+                write_strb[byte_index]
+                    ? write_data[byte_index*8 +: 8]
+                    : source_base_reg[byte_index*8 +: 8];
         end
-    endfunction
+    endgenerate
+
+    assign next_config[7:0] = write_strb[0]
+                              ? write_data[7:0] : config_reg[7:0];
+    assign next_config[9:8] = write_strb[1]
+                              ? write_data[9:8] : config_reg[9:8];
 
     assign O_top[0]     = 1'b1;
     assign O_top[1]     = done_sticky;
@@ -230,27 +259,17 @@ module dma_a (
     assign write_have_aw = aw_hold_valid || aw_accept;
     assign write_have_w  = w_hold_valid || w_accept;
     assign write_commit  = write_have_aw && write_have_w && !axil_bvalid;
-    assign write_addr = aw_hold_valid ? awaddr_hold : axil_awaddr;
-    assign write_data = w_hold_valid  ? wdata_hold  : axil_wdata;
-    assign write_strb = w_hold_valid  ? wstrb_hold  : axil_wstrb;
 
-    assign next_source_base = apply_wstrb(
-        source_base_reg, write_data, write_strb
-    );
-    assign next_config[7:0] = write_strb[0]
-                            ? write_data[7:0]
-                            : config_reg[7:0];
-    assign next_config[9:8] = write_strb[1]
-                            ? write_data[9:8]
-                            : config_reg[9:8];
     assign invalid_weight_config = !config_reg[9] && config_reg[3] &&
                                    ((config_reg[6:5] == 2'd3) ||
                                     (config_reg[8:7] == 2'd3));
     // Packed activation groups are eight-byte aligned. Packed weight slices
     // require 64-byte alignment so their 16-beat request cannot cross 4 KiB.
+    assign invalid_activation_alignment = |next_source_base[2:0];
+    assign invalid_weight_alignment     = |next_source_base[5:0];
     assign invalid_source_alignment = config_reg[3]
-                                    ? |next_source_base[5:0]
-                                    : |next_source_base[2:0];
+                                      ? invalid_weight_alignment
+                                      : invalid_activation_alignment;
 
     always @(posedge clk) begin
         if (!rstn) begin
@@ -322,6 +341,28 @@ module dma_a (
         end
     end
 
+    // Exact-address validation returns zero/DECERR for aliases or unsupported
+    // offsets. Leave mux implementation to synthesis so every packed cell is
+    // legal for the selected FABulous tile architecture.
+    assign axil_status_word = {
+        29'd0, error_sticky, agu_busy, done_sticky
+    };
+    assign axil_config_word = {22'd0, config_reg};
+    assign axil_read_addr_valid = (axil_araddr == 10'h000) ||
+                                  (axil_araddr == 10'h004) ||
+                                  (axil_araddr == 10'h008);
+
+    assign axil_read_mux_data = (axil_araddr[4:2] == 3'd0)
+                                ? source_base_reg
+                                : (axil_araddr[4:2] == 3'd1)
+                                  ? axil_status_word
+                                  : (axil_araddr[4:2] == 3'd2)
+                                    ? axil_config_word : 32'd0;
+    assign axil_read_data = axil_read_addr_valid
+                            ? axil_read_mux_data : 32'd0;
+    assign axil_read_resp = axil_read_addr_valid
+                            ? AXI_RESP_OKAY : AXI_RESP_DECERR;
+
     assign axil_arready = !axil_rvalid;
     always @(posedge clk) begin
         if (!rstn) begin
@@ -332,69 +373,107 @@ module dma_a (
             if (axil_rvalid && axil_rready)
                 axil_rvalid <= 1'b0;
             if (axil_arvalid && axil_arready) begin
+                axil_rdata  <= axil_read_data;
+                axil_rresp  <= axil_read_resp;
                 axil_rvalid <= 1'b1;
-                case (axil_araddr)
-                    10'h000: begin
-                        axil_rdata <= source_base_reg;
-                        axil_rresp <= AXI_RESP_OKAY;
-                    end
-                    10'h004: begin
-                        axil_rdata <= {
-                            29'd0, error_sticky, agu_busy, done_sticky
-                        };
-                        axil_rresp <= AXI_RESP_OKAY;
-                    end
-                    10'h008: begin
-                        axil_rdata <= {22'd0, config_reg};
-                        axil_rresp <= AXI_RESP_OKAY;
-                    end
-                    default: begin
-                        axil_rdata <= 32'd0;
-                        axil_rresp <= AXI_RESP_DECERR;
-                    end
-                endcase
             end
         end
     end
 
-    assign map_valid         = map_valid_q;
-    assign map_data          = map_data_q;
-    assign map_source_addr   = map_source_addr_q;
-    assign map_source_stride = map_source_stride_q;
-    assign map_buffer_addr   = map_buffer_addr_q;
-    assign map_bank_mask     = map_bank_mask_q;
-    assign map_is_weight     = map_is_weight_q;
-    assign map_zero_fill     = map_zero_fill_q;
-    assign map_last          = map_last_q;
-    assign map_weight_swap   = agu_weight_swap;
-
-    assign map_fire              = map_valid_q && map_ready;
-    assign output_slot_available = !map_valid_q || map_ready;
-    assign agu_load_ready        = (fetch_state_q == FETCH_DRAIN) && map_fire;
-
-    // AXI bursts are clipped at the 4 KiB boundary. The largest row is only
-    // 34 beats, so ARLEN remains comfortably below its 256-beat limit.
-    assign bytes_to_4k     = 13'd4096 - {1'b0, read_addr_q[11:0]};
-    assign beats_to_4k     = bytes_to_4k[12:2];
-    assign row_beats_wide  = {4'd0, row_beats_remaining_q};
-    assign next_burst_beats = (row_beats_wide < beats_to_4k)
-                            ? row_beats_wide : beats_to_4k;
+    // AXI bursts are clipped at the 4 KiB boundary.
+    assign bytes_to_4k      = 13'd4096 - {1'b0, read_addr_q[11:0]};
+    assign beats_to_4k      = bytes_to_4k[12:2];
+    assign row_beats_wide   = {4'd0, row_beats_remaining_q};
+    assign row_finishes_before_4k = row_beats_wide < beats_to_4k;
+    assign next_burst_beats = row_finishes_before_4k
+                              ? row_beats_wide : beats_to_4k;
 
     assign m_axi_araddr  = read_addr_q;
-    assign m_axi_arlen   = (next_burst_beats == 0)
-                         ? 8'd0 : next_burst_beats[7:0] - 1'b1;
+    assign m_axi_arlen   = next_burst_beats[7:0] - 8'd1;
     assign m_axi_arsize  = 3'b010;
     assign m_axi_arburst = 2'b01;
     assign m_axi_arvalid = (fetch_state_q == FETCH_AR);
 
-    // A first word can be retained even while the previous complete group is
-    // stalled. A second word is accepted only when the complete-group output
-    // register is empty or is being consumed on this cycle.
-    assign m_axi_rready = (fetch_state_q == FETCH_R) &&
-                          (!half_valid_q || output_slot_available);
-    assign r_fire = m_axi_rvalid && m_axi_rready;
-    assign accepted_rdata = (m_axi_rresp == AXI_RESP_OKAY)
-                          ? m_axi_rdata : 32'd0;
+    // With direct steering there is no widening register to fill. Ownership
+    // backpressure is propagated directly to the AXI R channel.
+    assign m_axi_rready = (fetch_state_q == FETCH_R) && map_ready;
+    assign r_fire       = m_axi_rvalid && m_axi_rready;
+
+    assign map_valid = (fetch_state_q == FETCH_PREFIX) ||
+                       (fetch_state_q == FETCH_ZERO)   ||
+                       (fetch_state_q == FETCH_SUFFIX) ||
+                       ((fetch_state_q == FETCH_R) && m_axi_rvalid);
+    assign map_fire  = map_valid && map_ready;
+
+    assign map_uses_axi_data = (fetch_state_q == FETCH_R) &&
+                               (m_axi_rresp == AXI_RESP_OKAY);
+    assign map_data = map_uses_axi_data ? m_axi_rdata : 32'd0;
+
+    // Source metadata names the exact four-byte beat. The destination names
+    // the shared eight-channel group and therefore remains unchanged across
+    // its low and high halves.
+    assign beat_byte_offset    = beat_high_q ? 32'd4 : 32'd0;
+    assign indexed_source_addr = command_source_q +
+                                 {23'd0, group_index_q, 3'b000} +
+                                 beat_byte_offset;
+    assign suffix_source_addr  = command_source_q +
+                                 {23'd0, command_group_count_q, 3'b000} +
+                                 beat_byte_offset;
+
+    assign prefix_buffer_addr  = command_buffer_q;
+    assign indexed_buffer_addr = command_buffer_q + group_index_q;
+    assign fetched_buffer_addr = command_buffer_q +
+                                  (command_pad_before_q ? 1'b1 : 1'b0) +
+                                  group_index_q;
+    assign suffix_buffer_addr  = command_buffer_q + command_group_count_q;
+
+    // 00 prefix, 01 local-zero descriptor, 10 fetched data, 11 suffix.
+    assign map_addr_select[0] = (fetch_state_q == FETCH_ZERO) ||
+                                (fetch_state_q == FETCH_SUFFIX);
+    assign map_addr_select[1] = (fetch_state_q == FETCH_R) ||
+                                (fetch_state_q == FETCH_SUFFIX);
+
+    assign map_buffer_addr = (map_addr_select == 2'b00)
+                             ? prefix_buffer_addr
+                             : (map_addr_select == 2'b01)
+                               ? indexed_buffer_addr
+                               : (map_addr_select == 2'b10)
+                                 ? fetched_buffer_addr
+                                 : suffix_buffer_addr;
+    assign map_source_addr = (map_addr_select == 2'b00)
+                             ? command_source_q + beat_byte_offset
+                             : (map_addr_select == 2'b11)
+                               ? suffix_source_addr
+                               : indexed_source_addr;
+
+    assign low_bank_mask  = command_bank_mask_q & 8'h0f;
+    assign high_bank_mask = command_bank_mask_q & 8'hf0;
+    assign map_bank_mask = beat_high_q ? high_bank_mask : low_bank_mask;
+
+    assign map_source_stride = command_stride_q;
+    assign map_is_weight     = command_is_weight_q;
+    assign map_zero_fill     = (fetch_state_q == FETCH_PREFIX) ||
+                               (fetch_state_q == FETCH_ZERO) ||
+                               (fetch_state_q == FETCH_SUFFIX);
+    assign map_last = beat_high_q && command_last_q &&
+                      (((fetch_state_q == FETCH_ZERO) &&
+                        (group_index_q == command_group_count_q - 1'b1)) ||
+                       ((fetch_state_q == FETCH_R) &&
+                        !command_pad_after_q &&
+                        (group_index_q == command_group_count_q - 1'b1)) ||
+                       (fetch_state_q == FETCH_SUFFIX));
+    assign map_weight_swap = agu_weight_swap;
+
+    // Retire the descriptor on its final accepted high-bank beat. This keeps
+    // the original one-disabled-cycle weight-shift/swap timing even though the
+    // old registered 64-bit map stage no longer exists.
+    assign descriptor_complete_fire = map_fire && beat_high_q &&
+        (((fetch_state_q == FETCH_ZERO) &&
+          (group_index_q == command_group_count_q - 1'b1)) ||
+         ((fetch_state_q == FETCH_R) &&
+          (row_beats_remaining_q == 7'd1) && !command_pad_after_q) ||
+         (fetch_state_q == FETCH_SUFFIX));
+    assign agu_load_ready = descriptor_complete_fire;
 
     always @(posedge clk) begin
         if (!rstn) begin
@@ -407,31 +486,15 @@ module dma_a (
             command_pad_before_q   <= 1'b0;
             command_pad_after_q    <= 1'b0;
             command_is_weight_q    <= 1'b0;
-            command_zero_fill_q    <= 1'b0;
             command_last_q         <= 1'b0;
             read_addr_q            <= 32'd0;
             row_beats_remaining_q  <= 7'd0;
             burst_beats_left_q     <= 7'd0;
-            half_word_q            <= 32'd0;
-            half_valid_q           <= 1'b0;
             group_index_q          <= 6'd0;
-            map_data_q             <= 64'd0;
-            map_source_addr_q      <= 32'd0;
-            map_source_stride_q    <= 5'd0;
-            map_buffer_addr_q      <= 9'd0;
-            map_bank_mask_q        <= 8'd0;
-            map_is_weight_q        <= 1'b0;
-            map_zero_fill_q        <= 1'b0;
-            map_last_q             <= 1'b0;
-            map_valid_q            <= 1'b0;
+            beat_high_q            <= 1'b0;
             axi_read_error_pulse   <= 1'b0;
         end else begin
             axi_read_error_pulse <= 1'b0;
-
-            // Unless a new group is written below, a successful handshake
-            // frees the complete-group output register.
-            if (map_fire)
-                map_valid_q <= 1'b0;
 
             case (fetch_state_q)
                 FETCH_IDLE: begin
@@ -444,13 +507,12 @@ module dma_a (
                         command_pad_before_q  <= agu_pad_before;
                         command_pad_after_q   <= agu_pad_after;
                         command_is_weight_q   <= agu_is_weight;
-                        command_zero_fill_q   <= agu_zero_fill;
                         command_last_q        <= agu_last;
                         read_addr_q           <= agu_source_addr;
                         row_beats_remaining_q <= {agu_group_count, 1'b0};
                         burst_beats_left_q    <= 7'd0;
-                        half_valid_q          <= 1'b0;
                         group_index_q         <= 6'd0;
+                        beat_high_q           <= 1'b0;
 
                         if (agu_zero_fill)
                             fetch_state_q <= FETCH_ZERO;
@@ -462,39 +524,29 @@ module dma_a (
                 end
 
                 FETCH_PREFIX: begin
-                    if (output_slot_available) begin
-                        map_data_q          <= 64'd0;
-                        map_source_addr_q   <= command_source_q;
-                        map_source_stride_q <= command_stride_q;
-                        map_buffer_addr_q   <= command_buffer_q;
-                        map_bank_mask_q     <= command_bank_mask_q;
-                        map_is_weight_q     <= command_is_weight_q;
-                        map_zero_fill_q     <= 1'b1;
-                        map_last_q          <= 1'b0;
-                        map_valid_q         <= 1'b1;
-                        fetch_state_q       <= FETCH_AR;
+                    if (map_fire) begin
+                        if (beat_high_q) begin
+                            beat_high_q   <= 1'b0;
+                            fetch_state_q <= FETCH_AR;
+                        end else begin
+                            beat_high_q <= 1'b1;
+                        end
                     end
                 end
 
                 FETCH_ZERO: begin
-                    if (output_slot_available) begin
-                        map_data_q          <= 64'd0;
-                        map_source_addr_q   <= command_source_q +
-                                               {group_index_q, 3'b000};
-                        map_source_stride_q <= command_stride_q;
-                        map_buffer_addr_q   <= command_buffer_q + group_index_q;
-                        map_bank_mask_q     <= command_bank_mask_q;
-                        map_is_weight_q     <= 1'b0;
-                        map_zero_fill_q     <= command_zero_fill_q;
-                        map_last_q          <= command_last_q &&
-                                               (group_index_q ==
-                                                command_group_count_q - 1'b1);
-                        map_valid_q         <= 1'b1;
-
-                        if (group_index_q == command_group_count_q - 1'b1)
-                            fetch_state_q <= FETCH_DRAIN;
-                        else
-                            group_index_q <= group_index_q + 1'b1;
+                    if (map_fire) begin
+                        if (beat_high_q) begin
+                            beat_high_q <= 1'b0;
+                            if (group_index_q ==
+                                command_group_count_q - 1'b1) begin
+                                fetch_state_q <= FETCH_IDLE;
+                            end else begin
+                                group_index_q <= group_index_q + 1'b1;
+                            end
+                        end else begin
+                            beat_high_q <= 1'b1;
+                        end
                     end
                 end
 
@@ -516,35 +568,18 @@ module dma_a (
                         row_beats_remaining_q <= row_beats_remaining_q - 1'b1;
                         burst_beats_left_q    <= burst_beats_left_q - 1'b1;
 
-                        if (!half_valid_q) begin
-                            half_word_q  <= accepted_rdata;
-                            half_valid_q <= 1'b1;
+                        if (beat_high_q) begin
+                            beat_high_q   <= 1'b0;
+                            group_index_q <= group_index_q + 1'b1;
                         end else begin
-                            map_data_q          <= {accepted_rdata, half_word_q};
-                            map_source_addr_q   <= command_source_q +
-                                                   {group_index_q, 3'b000};
-                            map_source_stride_q <= command_stride_q;
-                            map_buffer_addr_q   <= command_buffer_q +
-                                                   (command_pad_before_q ? 1'b1
-                                                                         : 1'b0) +
-                                                   group_index_q;
-                            map_bank_mask_q     <= command_bank_mask_q;
-                            map_is_weight_q     <= command_is_weight_q;
-                            map_zero_fill_q     <= 1'b0;
-                            map_last_q          <= command_last_q &&
-                                                   !command_pad_after_q &&
-                                                   (group_index_q ==
-                                                    command_group_count_q - 1'b1);
-                            map_valid_q         <= 1'b1;
-                            half_valid_q        <= 1'b0;
-                            group_index_q       <= group_index_q + 1'b1;
+                            beat_high_q <= 1'b1;
                         end
 
                         if (row_beats_remaining_q == 7'd1) begin
                             if (command_pad_after_q)
                                 fetch_state_q <= FETCH_SUFFIX;
                             else
-                                fetch_state_q <= FETCH_DRAIN;
+                                fetch_state_q <= FETCH_IDLE;
                         end else if (m_axi_rlast ||
                                      (burst_beats_left_q == 7'd1)) begin
                             // Normal page-boundary split, or recovery from an
@@ -555,25 +590,18 @@ module dma_a (
                 end
 
                 FETCH_SUFFIX: begin
-                    if (output_slot_available) begin
-                        map_data_q          <= 64'd0;
-                        map_source_addr_q   <= command_source_q +
-                                               {command_group_count_q, 3'b000};
-                        map_source_stride_q <= command_stride_q;
-                        map_buffer_addr_q   <= command_buffer_q +
-                                               command_group_count_q;
-                        map_bank_mask_q     <= command_bank_mask_q;
-                        map_is_weight_q     <= 1'b0;
-                        map_zero_fill_q     <= 1'b1;
-                        map_last_q          <= command_last_q;
-                        map_valid_q         <= 1'b1;
-                        fetch_state_q       <= FETCH_DRAIN;
+                    if (map_fire) begin
+                        if (beat_high_q) begin
+                            beat_high_q   <= 1'b0;
+                            fetch_state_q <= FETCH_IDLE;
+                        end else begin
+                            beat_high_q <= 1'b1;
+                        end
                     end
                 end
 
-                default: begin // FETCH_DRAIN
-                    if (map_fire)
-                        fetch_state_q <= FETCH_IDLE;
+                default: begin
+                    fetch_state_q <= FETCH_IDLE;
                 end
             endcase
         end

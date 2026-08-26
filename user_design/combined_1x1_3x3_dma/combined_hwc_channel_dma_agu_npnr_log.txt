@@ -3,10 +3,10 @@ Info: Reading BELs file: /.FABulous/bel.v3.txt
 Info: Reading PIPs file: /.FABulous/pips.txt
 
 Info: No PCF file specified, skipping constraints application.
-Info: Checksum: 0x181bf04b
+Info: Checksum: 0x051cab4d
 
 Info: Device utilisation:
-Info: 	         FABULOUS_LC:    1041/    800   130%
+Info: 	         FABULOUS_LC:     878/    800   109%
 Info: 	IO_1_bidirectional_frame_config_pass:      20/     20   100%
 Info: 	        Global_Clock:       1/      1   100%
 Info: 	       FABULOUS_MUX2:       0/    400     0%
@@ -17,5 +17,5 @@ Info: 	           AXI_M_BEL:       1/      1   100%
 Info: 	          AXIL_S_BEL:       1/      1   100%
 
 Info: Placed 22 cells based on constraints.
-ERROR: Unable to place cell '$abc$8460$auto$blifparse.cc:557:parse_blif$8701', no BELs remaining to implement cell type 'FABULOUS_LC'
+ERROR: Unable to place cell '$abc$8236$auto$blifparse.cc:557:parse_blif$8314', no BELs remaining to implement cell type 'FABULOUS_LC'
 0 warnings, 1 error

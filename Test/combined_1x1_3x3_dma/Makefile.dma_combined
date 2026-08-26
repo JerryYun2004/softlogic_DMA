@@ -19,6 +19,12 @@ NPU_INTEGRATION_SRC := $(RTL_DIR)/combined_dma_npu_sram_top.sv
 
 UNIT_TB := $(TEST_DIR)/tb_combined_dma.sv
 MODEL_CHECK := $(TEST_DIR)/check_reference_schedules.py
+MUX_LEGALITY_CHECK := $(TEST_DIR)/check_fabulous_mux_usage.py
+
+# The FABulous flow normally writes this JSON before nextpnr. Override with
+# `SYNTH_JSON=/path/to/design.json` if the platform uses a different name.
+SYNTH_JSON ?= $(RTL_DIR)/combined_hwc_channel_dma_agu.json
+SYNTH_TOP ?= top_wrapper
 
 NPU_RTL_DIR ?= $(REPO_ROOT)/user_design/npu
 NPU_SRCS ?= \
@@ -41,7 +47,7 @@ CONV3_GOLDEN_MEM ?= $(CONV3_MEM_DIR)/golden_conv3.mem
 UNIT_VVP := $(BUILD_DIR)/tb_combined_dma.vvp
 SEQ_VVP := $(BUILD_DIR)/tb_npu_yolo_combined_sequential_integrated.vvp
 
-.PHONY: all check packed-check ownership-check sim unit model integrated integrated-sequential \
+.PHONY: all check packed-check ownership-check pnr-mux-check mux-usage sim unit model integrated integrated-sequential \
 	check-tools check-npu-files check-conv1-mem check-conv3-mem clean help
 
 all: check
@@ -64,8 +70,24 @@ unit: check-tools $(UNIT_VVP)
 	$(VVP) $(UNIT_VVP)
 
 model:
-	@echo "Checking packed descriptors and long-burst AXI read plan"
+	@echo "Checking packed descriptors, direct 32-bit steering, and AXI read plan"
 	$(PYTHON) $(MODEL_CHECK)
+
+# Run this after the platform Yosys step. This baseline intentionally contains
+# no manually forced FABULOUS_MUX2/4/8 cells. On this fabric those are LUT
+# cascade resources, and nextpnr rejects one whose data input is register- or
+# I/O-driven. Architecture-aware synthesis may introduce legal cascades later.
+pnr-mux-check:
+	@test -f "$(SYNTH_JSON)" || { \
+		echo "ERROR: synthesized JSON not found: $(SYNTH_JSON)"; \
+		echo "Run the Yosys/compile-json step first or set SYNTH_JSON=..."; \
+		exit 1; \
+	}
+	$(PYTHON) $(MUX_LEGALITY_CHECK) "$(SYNTH_JSON)" --top "$(SYNTH_TOP)" \
+		--max-mux2 0 --max-mux4 0 --max-mux8 0
+
+# Backward-compatible name for the command used by the previous package.
+mux-usage: pnr-mux-check
 
 integrated: integrated-sequential
 
@@ -125,6 +147,7 @@ help:
 	@echo "make -f Test/combined_1x1_3x3_dma/Makefile.dma_combined check"
 	@echo "make -f Test/combined_1x1_3x3_dma/Makefile.dma_combined packed-check"
 	@echo "make -f Test/combined_1x1_3x3_dma/Makefile.dma_combined ownership-check"
+	@echo "make -f Test/combined_1x1_3x3_dma/Makefile.dma_combined pnr-mux-check SYNTH_JSON=path/to/design.json"
 	@echo "make -f Test/combined_1x1_3x3_dma/Makefile.dma_combined unit"
 	@echo "make -f Test/combined_1x1_3x3_dma/Makefile.dma_combined model"
 	@echo "make -f Test/combined_1x1_3x3_dma/Makefile.dma_combined integrated"

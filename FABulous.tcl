@@ -1,9 +1,7 @@
 # all Directory with in the script will be relative to the project folder
 load_fabric
 run_FABulous_fabric
-gen_user_design_wrapper user_design/sequential_16bit_en.v user_design/top_wrapper.v
-compile_design ./user_design/sequential_16bit_en.v
-run_simulation fst ./user_design/sequential_16bit_en.bin
+gen_user_design_wrapper user_design/combined_1x1_3x3_dma/combined_dma_npu_sram_top.sv user_design/top_wrapper.v
+compile_design ./user_design/combined_1x1_3x3_dma/combined_dma_npu_sram_top.sv
+run_simulation fst ./user_design/combined_1x1_3x3_dma/combined_1x1_3x3_dma/combined_dma_npu_sram_top.bin
 exit
-
-compile_design -top top_wrapper --synth-extra-args "-carry ha" user_design/gemm_dma/gemm_dma_axi_wrapper.sv user_design/gemm_dma/gemm_tile_dma_agu.sv

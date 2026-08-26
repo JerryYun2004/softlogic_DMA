@@ -16,7 +16,7 @@
 //
 // One accepted descriptor represents a complete packed activation row or a
 // complete packed weight slice. dma_a converts it to a long AXI INCR burst
-// and emits one eight-byte map group for every two returned 32-bit beats.
+// and steers each returned 32-bit beat directly to one half of the SRAM banks.
 module combined_hwc_channel_dma_agu #(
     parameter int unsigned SRC_ADDR_WIDTH = 32,
     parameter int unsigned ACT_ADDR_WIDTH = 9

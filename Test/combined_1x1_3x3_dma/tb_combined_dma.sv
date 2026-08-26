@@ -6,7 +6,7 @@
 // all 1x1 weight slices, immediate mode switching, AXI AW/W ordering, partial
 // configuration writes, invalid accesses, busy rejection, command stability
 // under backpressure, local halo zero-fill, packed-source addressing, long
-// 32-bit bursts, DRAM stalls, byte-lane unpacking, destination placement,
+// 32-bit bursts, DRAM stalls, direct four-bank steering, destination placement,
 // last, and weight-swap timing.
 module tb_combined_dma;
 
@@ -55,7 +55,7 @@ module tb_combined_dma;
 
     wire         map_valid;
     wire         map_ready;
-    wire [63:0]  map_data;
+    wire [31:0]  map_data;
     wire [31:0]  map_source_addr;
     wire [4:0]   map_source_stride;
     wire [8:0]   map_buffer_addr;
@@ -111,7 +111,7 @@ module tb_combined_dma;
     logic [7:0] loaded_weight   [0:7][0:7];
 
     logic        stalled_command;
-    logic [63:0] held_data;
+    logic [31:0] held_data;
     logic [31:0] held_source_addr;
     logic [4:0]  held_source_stride;
     logic [8:0]  held_buffer_addr;
@@ -127,8 +127,11 @@ module tb_combined_dma;
     integer mon_offset;
     integer mon_tap;
     integer mon_lane;
+    integer mon_bank_base;
+    integer mon_source_lane;
     integer mon_expected_zero;
     logic [31:0] mon_expected_addr;
+    logic        expected_high_half;
 
     localparam integer DRAM_GAP_CYCLES = 6;
     logic        dram_active_q;
@@ -193,6 +196,8 @@ module tb_combined_dma;
     );
 
     dma_npu_sram_adapter adapter_dut (
+        .clk_i                    (clk),
+        .rst_n                    (rstn),
         .dma_act_port_grant_i    (dma_act_port_grant),
         .dma_weight_port_grant_i (dma_weight_port_grant),
         .array_active_i          (array_active),
@@ -372,8 +377,10 @@ module tb_combined_dma;
         end
     end
 
-    // Fetched-group reference model. Destination data is sampled from the
-    // adapter's actual activation-SRAM and weight-shift output ports.
+    // Direct 32-bit steering reference model. Each accepted map beat writes
+    // four activation banks. A completed low/high pair counts as one original
+    // eight-channel group. Destination data is sampled from the adapter's
+    // actual activation-SRAM and weight-shift output ports.
     always @(posedge clk) begin
         if (!rstn) begin
             cycle_count       = 0;
@@ -381,6 +388,7 @@ module tb_combined_dma;
             total_commands    = 0;
             total_zero_commands = 0;
             total_swaps       = 0;
+            expected_high_half = 1'b0;
         end else begin
             cycle_count = cycle_count + 1;
 
@@ -389,6 +397,9 @@ module tb_combined_dma;
                     ? (dma_weight_port_grant && !array_active)
                     : (dma_act_port_grant && !array_active)))
                 record_error("map_ready did not match ownership of the relevant NPU port");
+
+            if (m_axi_rvalid && map_ready && !m_axi_rready)
+                record_error("direct 32-bit datapath inserted an AXI R bubble while its destination was ready");
 
             if (swap_weights !==
                 (dma_weight_port_grant && !array_active &&
@@ -424,7 +435,7 @@ module tb_combined_dma;
                     (map_is_weight     !== held_is_weight)     ||
                     (map_zero_fill     !== held_zero_fill)     ||
                     (map_last          !== held_last))
-                    record_error("a map command changed under backpressure");
+                    record_error("a direct map beat changed under backpressure");
             end
 
             if (map_valid && !map_ready) begin
@@ -445,15 +456,19 @@ module tb_combined_dma;
 
             if (map_valid && map_ready) begin
                 if (!operation_active) begin
-                    record_error("map command occurred outside an active operation");
+                    record_error("map beat occurred outside an active operation");
                 end else begin
-                    if (map_bank_mask !== 8'hff)
-                        record_error("map_bank_mask must select all eight banks");
+                    if (map_bank_mask !==
+                        (expected_high_half ? 8'hf0 : 8'h0f))
+                        record_error("32-bit map bank-half sequence mismatch");
                     if (map_is_weight !== exp_weight)
                         record_error("map_is_weight does not match the CPU command");
 
+                    mon_bank_base = expected_high_half ? 4 : 0;
+
                     if (exp_weight) begin
-                        mon_expected_addr = exp_base + command_count * 8;
+                        mon_expected_addr = exp_base + command_count * 8 +
+                                            (expected_high_half ? 4 : 0);
 
                         if (map_source_addr !== mon_expected_addr)
                             record_error("weight source address mismatch");
@@ -463,27 +478,32 @@ module tb_combined_dma;
                             record_error("weight shift index mismatch");
                         if (map_zero_fill !== 1'b0)
                             record_error("weight command asserted zero fill");
-                        if (map_last !== (command_count == 7))
+                        if (map_last !==
+                            (expected_high_half && (command_count == 7)))
                             record_error("weight last flag mismatch");
-                        if (!weight_shift_en)
-                            record_error("accepted weight map did not enable the NPU weight shifter");
+                        if (weight_shift_en !== expected_high_half)
+                            record_error("weight shifter did not pulse only on the high 32-bit half");
                         if (ext_act_sram_we !== 8'h00)
                             record_error("weight map incorrectly wrote an activation SRAM");
 
-                        for (mon_lane = 0; mon_lane < 8;
-                             mon_lane = mon_lane + 1) begin
-                            loaded_weight[mon_lane][7-command_count] =
-                                weight_shift_in[mon_lane];
-                            if (weight_shift_in[mon_lane] !==
-                                memory_byte(map_source_addr + mon_lane))
-                                record_error("NPU weight-shift lane data mismatch");
+                        if (expected_high_half) begin
+                            for (mon_lane = 0; mon_lane < 8;
+                                 mon_lane = mon_lane + 1) begin
+                                loaded_weight[mon_lane][7-command_count] =
+                                    weight_shift_in[mon_lane];
+                                if (weight_shift_in[mon_lane] !==
+                                    memory_byte(exp_base + command_count*8 +
+                                                mon_lane))
+                                    record_error("NPU weight-shift lane data mismatch");
+                            end
                         end
                     end else begin
                         if (exp_conv_1x1) begin
                             mon_ly = command_count / 16;
                             mon_lx = command_count % 16;
                             mon_expected_zero = 0;
-                            mon_expected_addr = exp_base + command_count * 8;
+                            mon_expected_addr = exp_base + command_count * 8 +
+                                                (expected_high_half ? 4 : 0);
                         end else begin
                             mon_ly = command_count / 18;
                             mon_lx = command_count % 18;
@@ -495,7 +515,8 @@ module tb_combined_dma;
                             mon_gy = mon_ly - (exp_tile_y ? 0 : 1);
                             mon_gx = mon_lx - (exp_tile_x ? 0 : 1);
                             mon_expected_addr = exp_base +
-                                                ((mon_gy * 17 + mon_gx) * 8);
+                                                ((mon_gy * 17 + mon_gx) * 8) +
+                                                (expected_high_half ? 4 : 0);
                         end
 
                         // Zero groups do not access DRAM, so their source
@@ -510,23 +531,26 @@ module tb_combined_dma;
                             record_error("activation destination address mismatch");
                         if (map_zero_fill !== (mon_expected_zero != 0))
                             record_error("activation halo zero-fill mismatch");
-                        if (map_last !== (command_count == exp_commands-1))
+                        if (map_last !==
+                            (expected_high_half &&
+                             (command_count == exp_commands-1)))
                             record_error("activation last flag mismatch");
                         if (ext_act_sram_we !== map_bank_mask)
                             record_error("activation SRAM write enables did not match the bank mask");
                         if (weight_shift_en)
                             record_error("activation map incorrectly enabled the weight shifter");
 
-                        if (map_zero_fill) begin
+                        if (map_zero_fill && expected_high_half) begin
                             zero_count = zero_count + 1;
                             total_zero_commands = total_zero_commands + 1;
                         end
 
-                        for (mon_lane = 0; mon_lane < 8;
+                        for (mon_lane = 0; mon_lane < 4;
                              mon_lane = mon_lane + 1) begin
-                            activation_bank[mon_lane][command_count] =
-                                ext_act_sram_wdata[mon_lane];
-                            if (ext_act_sram_wdata[mon_lane] !==
+                            mon_source_lane = mon_bank_base + mon_lane;
+                            activation_bank[mon_source_lane][command_count] =
+                                ext_act_sram_wdata[mon_source_lane];
+                            if (ext_act_sram_wdata[mon_source_lane] !==
                                 (map_zero_fill
                                     ? 8'd0
                                     : memory_byte(map_source_addr + mon_lane)))
@@ -534,13 +558,24 @@ module tb_combined_dma;
                         end
                     end
 
+                    for (mon_lane = 0; mon_lane < 4;
+                         mon_lane = mon_lane + 1) begin
+                        if (map_data[mon_lane*8 +: 8] !==
+                            (map_zero_fill
+                                ? 8'd0
+                                : memory_byte(map_source_addr + mon_lane)))
+                            record_error("direct 32-bit map byte-lane mismatch");
+                    end
+
                     if (map_last)
                         last_count = last_count + 1;
-                    if (exp_weight && (command_count == 7))
-                        last_weight_cycle = cycle_count;
-
-                    command_count = command_count + 1;
-                    total_commands = total_commands + 1;
+                    if (expected_high_half) begin
+                        if (exp_weight && (command_count == 7))
+                            last_weight_cycle = cycle_count;
+                        command_count = command_count + 1;
+                        total_commands = total_commands + 1;
+                    end
+                    expected_high_half = !expected_high_half;
                 end
             end
 
@@ -700,6 +735,7 @@ module tb_combined_dma;
             swap_count        = 0;
             zero_count        = 0;
             last_weight_cycle = -1000;
+            expected_high_half = 1'b0;
             operation_active  = 1'b1;
             operation_axi_bursts = 0;
             operation_axi_beats  = 0;
@@ -766,6 +802,8 @@ module tb_combined_dma;
         begin
             if (command_count != exp_commands)
                 record_error("operation command count mismatch");
+            if (expected_high_half !== 1'b0)
+                record_error("operation ended between low/high 32-bit halves");
             if (last_count != 1)
                 record_error("operation did not emit exactly one last flag");
             if (swap_count != (exp_weight ? 1 : 0))
@@ -991,6 +1029,7 @@ module tb_combined_dma;
         zero_count      = 0;
         last_weight_cycle = -1000;
         operation_active = 1'b0;
+        expected_high_half = 1'b0;
 
         total_commands            = 0;
         total_zero_commands       = 0;
@@ -1009,7 +1048,7 @@ module tb_combined_dma;
         rstn = 1'b1;
 
         $display("============================================================");
-        $display(" COMBINED PACKED 1x1 / 3x3 LONG-BURST DMA REGRESSION");
+        $display(" PACKED 1x1 / 3x3 DIRECT-32 LONG-BURST DMA REGRESSION");
         $display("============================================================");
 
         axil_read_expect(10'h000, AXI_RESP_OKAY, 32'd0);

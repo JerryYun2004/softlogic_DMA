@@ -40,8 +40,8 @@
 // slices through the DMA's real 32-bit AXI4 read master. It returns consecutive
 // beats within each long row/slice burst and inserts gaps only between bursts.
 // The synthesizable combined_dma_npu_sram_top owns the map adapter and connects
-// it to the activation/weight ports of the RTL npu_sram_wrapper. No write mux is
-// implemented in testbench-only logic.
+// each beat directly to four activation banks, or pairs two beats for the
+// existing eight-lane weight shifter. No write mux is testbench-only logic.
 module tb_npu_yolo_combined_sequential_integrated;
 
     parameter int ARRAY_HEIGHT     = 8;
@@ -182,7 +182,7 @@ module tb_npu_yolo_combined_sequential_integrated;
 
     wire        map_valid;
     wire        map_ready;
-    wire [63:0] map_data;
+    wire [31:0] map_data;
     wire [31:0] map_source_addr;
     wire [4:0]  map_source_stride;
     wire [8:0]  map_buffer_addr;
@@ -247,6 +247,7 @@ module tb_npu_yolo_combined_sequential_integrated;
     integer dma_groups_this_load;
     integer dma_last_this_load;
     integer dma_swap_this_load;
+    logic   dma_expected_high_half;
     integer weight_load_count;
     integer compute_pass_count;
 
@@ -651,7 +652,9 @@ module tb_npu_yolo_combined_sequential_integrated;
         end
     end
 
-    // Monitor every command actually accepted by the SRAM adapter.
+    // Monitor every direct 32-bit beat accepted by the SRAM adapter. A low/high
+    // pair counts as one eight-channel activation or weight group so the
+    // aggregate counters retain their original architectural meaning.
     always @(posedge clk_i) begin
         if (!rst_n) begin
             dma_total_groups      <= 0;
@@ -662,10 +665,9 @@ module tb_npu_yolo_combined_sequential_integrated;
             dma_groups_this_load  <= 0;
             dma_last_this_load    <= 0;
             dma_swap_this_load    <= 0;
+            dma_expected_high_half <= 1'b0;
         end else begin
             if (map_valid && map_ready) begin
-                dma_groups_this_load <= dma_groups_this_load + 1;
-
                 if (map_last)
                     dma_last_this_load <= dma_last_this_load + 1;
 
@@ -675,13 +677,15 @@ module tb_npu_yolo_combined_sequential_integrated;
                     errors = errors + 1;
                 end
 
-                if (map_bank_mask !== 8'hff) begin
-                    $display("ERROR: DMA bank/lane mask got=%02h expected=ff",
-                             map_bank_mask);
+                if (map_bank_mask !==
+                    (dma_expected_high_half ? 8'hf0 : 8'h0f)) begin
+                    $display("ERROR: DMA bank-half mask got=%02h expected=%02h",
+                             map_bank_mask,
+                             dma_expected_high_half ? 8'hf0 : 8'h0f);
                     errors = errors + 1;
                 end
 
-                for (int r = 0; r < ARRAY_HEIGHT; r++) begin
+                for (int r = 0; r < 4; r++) begin
                     if (map_data[r*8 +: 8] !==
                         (map_zero_fill
                             ? 8'd0
@@ -700,8 +704,10 @@ module tb_npu_yolo_combined_sequential_integrated;
                 end
 
                 if (map_is_weight) begin
-                    dma_total_weight_groups <= dma_total_weight_groups + 1;
-                    dma_total_weight_bytes  <= dma_total_weight_bytes + 8;
+                    dma_total_weight_bytes <= dma_total_weight_bytes + 4;
+                    if (dma_expected_high_half)
+                        dma_total_weight_groups <=
+                            dma_total_weight_groups + 1;
 
                     if (map_source_stride !== 5'd1) begin
                         $display("ERROR: packed DMA weight stride got=%0d expected=1",
@@ -713,7 +719,7 @@ module tb_npu_yolo_combined_sequential_integrated;
                         errors = errors + 1;
                     end
                     if (!((map_source_addr >= dma_current_source_base) &&
-                          (map_source_addr + 7 <
+                          (map_source_addr + 3 <
                            dma_current_source_base +
                            dma_current_source_bytes))) begin
                         $display("ERROR: DMA source address out of weight range: %08h",
@@ -721,14 +727,15 @@ module tb_npu_yolo_combined_sequential_integrated;
                         errors = errors + 1;
                     end
                 end else begin
-                    dma_total_groups <= dma_total_groups + 1;
+                    if (dma_expected_high_half)
+                        dma_total_groups <= dma_total_groups + 1;
 
                     if (map_source_stride !== 5'd1) begin
                         $display("ERROR: DMA activation stride got=%0d expected=1",
                                  map_source_stride);
                         errors = errors + 1;
                     end
-                    if (map_zero_fill)
+                    if (map_zero_fill && dma_expected_high_half)
                         dma_total_zero_groups <= dma_total_zero_groups + 1;
                     if (dma_status[9] && map_zero_fill) begin
                         $display("ERROR: 1x1 activation DMA requested zero fill");
@@ -736,7 +743,7 @@ module tb_npu_yolo_combined_sequential_integrated;
                     end
                     if (!map_zero_fill &&
                         !((map_source_addr >= dma_current_source_base) &&
-                          (map_source_addr + 7 <
+                          (map_source_addr + 3 <
                            dma_current_source_base +
                            dma_current_source_bytes))) begin
                         $display("ERROR: DMA source address out of image range: %08h",
@@ -744,6 +751,15 @@ module tb_npu_yolo_combined_sequential_integrated;
                         errors = errors + 1;
                     end
                 end
+
+                if (map_last && !dma_expected_high_half) begin
+                    $display("ERROR: map_last asserted on the low 32-bit half");
+                    errors = errors + 1;
+                end
+
+                if (dma_expected_high_half)
+                    dma_groups_this_load <= dma_groups_this_load + 1;
+                dma_expected_high_half <= !dma_expected_high_half;
             end
 
             if (map_weight_swap) begin
@@ -830,6 +846,7 @@ module tb_npu_yolo_combined_sequential_integrated;
             dma_groups_this_load = 0;
             dma_last_this_load   = 0;
             dma_swap_this_load   = 0;
+            dma_expected_high_half = 1'b0;
             dma_act_port_grant    = 1'b1;
             dma_weight_port_grant = 1'b0;
             dma_current_source_base  = source_pointer;
@@ -850,6 +867,11 @@ module tb_npu_yolo_combined_sequential_integrated;
             dma_act_port_grant = 1'b0;
             dma_load_count  = dma_load_count + 1;
             dma_act_cycles  = dma_act_cycles + (total_cycles - start_cycle);
+
+            if (dma_expected_high_half !== 1'b0) begin
+                $display("ERROR: 3x3 activation load ended between 32-bit halves");
+                errors = errors + 1;
+            end
 
             if (dma_groups_this_load != GROUPS_PER_3X3_ACT_LOAD) begin
                 $display("ERROR: DMA load ty=%0d tx=%0d cin=%0d emitted %0d groups, expected %0d",
@@ -914,6 +936,7 @@ module tb_npu_yolo_combined_sequential_integrated;
             dma_groups_this_load = 0;
             dma_last_this_load   = 0;
             dma_swap_this_load   = 0;
+            dma_expected_high_half = 1'b0;
             dma_act_port_grant    = 1'b0;
             dma_weight_port_grant = 1'b1;
             dma_current_source_base  = source_pointer;
@@ -935,6 +958,11 @@ module tb_npu_yolo_combined_sequential_integrated;
             weight_load_count  = weight_load_count + 1;
             weight_load_cycles = weight_load_cycles +
                                  (total_cycles - start_cycle);
+
+            if (dma_expected_high_half !== 1'b0) begin
+                $display("ERROR: 3x3 weight load ended between 32-bit halves");
+                errors = errors + 1;
+            end
 
             if (dma_groups_this_load != 8) begin
                 $display("ERROR: weight DMA ky=%0d kx=%0d cin=%0d cout=%0d emitted %0d groups, expected 8",
@@ -1080,6 +1108,7 @@ module tb_npu_yolo_combined_sequential_integrated;
             dma_groups_this_load = 0;
             dma_last_this_load   = 0;
             dma_swap_this_load   = 0;
+            dma_expected_high_half = 1'b0;
             dma_act_port_grant    = 1'b1;
             dma_weight_port_grant = 1'b0;
             dma_current_source_base  = source_pointer;
@@ -1102,6 +1131,11 @@ module tb_npu_yolo_combined_sequential_integrated;
             dma_act_port_grant = 1'b0;
             dma_load_count  = dma_load_count + 1;
             dma_act_cycles  = dma_act_cycles + (total_cycles - start_cycle);
+
+            if (dma_expected_high_half !== 1'b0) begin
+                $display("ERROR: 1x1 activation load ended between 32-bit halves");
+                errors = errors + 1;
+            end
 
             if (dma_status[3]) begin
                 $display("ERROR: DMA wrapper error after 1x1 activation load ty=%0d tx=%0d cin=%0d",
@@ -1144,6 +1178,7 @@ module tb_npu_yolo_combined_sequential_integrated;
             dma_groups_this_load = 0;
             dma_last_this_load   = 0;
             dma_swap_this_load   = 0;
+            dma_expected_high_half = 1'b0;
             dma_act_port_grant    = 1'b0;
             dma_weight_port_grant = 1'b1;
             dma_current_source_base  = source_pointer;
@@ -1165,6 +1200,11 @@ module tb_npu_yolo_combined_sequential_integrated;
             weight_load_count  = weight_load_count + 1;
             weight_load_cycles = weight_load_cycles +
                                  (total_cycles - start_cycle);
+
+            if (dma_expected_high_half !== 1'b0) begin
+                $display("ERROR: 1x1 weight load ended between 32-bit halves");
+                errors = errors + 1;
+            end
 
             if (dma_status[3]) begin
                 $display("ERROR: DMA wrapper error after 1x1 weight load cin=%0d cout=%0d",
@@ -1315,6 +1355,7 @@ module tb_npu_yolo_combined_sequential_integrated;
         dma_weight_port_grant   = 1'b0;
         dma_current_source_base = 32'd0;
         dma_current_source_bytes = 0;
+        dma_expected_high_half   = 1'b0;
         total_cycles            = 0;
         dma_act_cycles          = 0;
         weight_load_cycles      = 0;

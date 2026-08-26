@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check packed row descriptors, map groups, and the AXI4 burst plan.
+"""Check packed descriptors, direct 32-bit steering, and AXI4 bursts.
 
 This simulator-independent model mirrors the packed-source RTL. The
 SystemVerilog regressions remain authoritative, but this check runs on hosts
@@ -32,6 +32,19 @@ class RowDescriptor:
 class MapGroup:
     source: int
     destination: int
+    is_weight: bool
+    zero_fill: bool
+    last: bool
+
+
+@dataclass(frozen=True)
+class MapBeat:
+    """One four-byte map transfer and its selected SRAM-bank half."""
+
+    source: int
+    destination: int
+    bank_mask: int
+    data: tuple[int, ...]
     is_weight: bool
     zero_fill: bool
     last: bool
@@ -166,6 +179,31 @@ def patterned_byte(address: int) -> int:
     ) & 0xFF
 
 
+def expand_beats(descriptor: RowDescriptor) -> list[MapBeat]:
+    """Split each eight-channel map group into low/high 32-bit beats."""
+    beats: list[MapBeat] = []
+    for group in expand_groups(descriptor):
+        for high_half in (False, True):
+            source = u32(group.source + (4 if high_half else 0))
+            data = (
+                (0, 0, 0, 0)
+                if group.zero_fill
+                else tuple(patterned_byte(source + lane) for lane in range(4))
+            )
+            beats.append(
+                MapBeat(
+                    source=source,
+                    destination=group.destination,
+                    bank_mask=0xF0 if high_half else 0x0F,
+                    data=data,
+                    is_weight=group.is_weight,
+                    zero_fill=group.zero_fill,
+                    last=group.last and high_half,
+                )
+            )
+    return beats
+
+
 def execute_fetch(descriptor: RowDescriptor) -> list[tuple[int, ...]]:
     fetched: list[tuple[int, ...]] = []
     for group in expand_groups(descriptor):
@@ -176,6 +214,26 @@ def execute_fetch(descriptor: RowDescriptor) -> list[tuple[int, ...]]:
                 tuple(patterned_byte(group.source + lane) for lane in range(8))
             )
     return fetched
+
+
+def validate_direct_steering(descriptor: RowDescriptor) -> None:
+    groups = expand_groups(descriptor)
+    beats = expand_beats(descriptor)
+    assert len(beats) == len(groups) * 2
+
+    for index, group in enumerate(groups):
+        low = beats[index * 2]
+        high = beats[index * 2 + 1]
+        assert low.destination == group.destination == high.destination
+        assert low.bank_mask == 0x0F
+        assert high.bank_mask == 0xF0
+        assert low.source == group.source
+        assert high.source == u32(group.source + 4)
+        assert not low.last
+        assert high.last == group.last
+        assert low.is_weight == group.is_weight == high.is_weight
+        assert low.zero_fill == group.zero_fill == high.zero_fill
+        assert low.data + high.data == execute_fetch(descriptor)[index]
 
 
 def validate_bursts(descriptor: RowDescriptor, bursts: list[ReadBurst]) -> None:
@@ -199,6 +257,7 @@ def main() -> None:
     descriptors_checked = 0
     groups_checked = 0
     zero_fills = 0
+    map_beats_checked = 0
     bursts_checked = 0
     beats_checked = 0
 
@@ -232,6 +291,7 @@ def main() -> None:
 
                     case_bursts = []
                     for descriptor in descriptors:
+                        validate_direct_steering(descriptor)
                         burst_plan = axi_read_plan(descriptor)
                         validate_bursts(descriptor, burst_plan)
                         case_bursts.extend(burst_plan)
@@ -249,6 +309,7 @@ def main() -> None:
                     descriptors_checked += len(descriptors)
                     groups_checked += len(groups)
                     zero_fills += sum(group.zero_fill for group in groups)
+                    map_beats_checked += len(groups) * 2
                     bursts_checked += len(case_bursts)
                     beats_checked += sum(burst.beats for burst in case_bursts)
 
@@ -263,6 +324,7 @@ def main() -> None:
                         base = WEIGHT_BASE + slice_index * 64
                         descriptor = weight_descriptor(base)
                         groups = expand_groups(descriptor)
+                        validate_direct_steering(descriptor)
                         bursts = axi_read_plan(descriptor)
                         validate_bursts(descriptor, bursts)
                         assert len(groups) == 8
@@ -277,6 +339,7 @@ def main() -> None:
                         weight_cases += 1
                         descriptors_checked += 1
                         groups_checked += 8
+                        map_beats_checked += 16
                         bursts_checked += 1
                         beats_checked += 16
 
@@ -292,6 +355,7 @@ def main() -> None:
         last=True,
     )
     crossing_plan = axi_read_plan(crossing)
+    validate_direct_steering(crossing)
     assert crossing_plan == [
         ReadBurst(0x3000_0FC0, 16),
         ReadBurst(0x3000_1000, 16),
@@ -303,13 +367,15 @@ def main() -> None:
     assert descriptors_checked == 312
     assert groups_checked == 4960
     assert zero_fills == 280
+    assert map_beats_checked == 9920
     assert bursts_checked == 304
     assert beats_checked == 9360
     print(
         "PASS: packed schedules and long-burst AXI plan match the reference "
         f"model ({activation_cases} activation cases, {weight_cases} weight "
         f"cases, {descriptors_checked} row/slice descriptors, "
-        f"{groups_checked} map groups, {zero_fills} zero fills, "
+        f"{groups_checked} map groups, {map_beats_checked} direct map beats, "
+        f"{zero_fills} zero fills, "
         f"{bursts_checked} bursts, {beats_checked} 32-bit beats)"
     )
 

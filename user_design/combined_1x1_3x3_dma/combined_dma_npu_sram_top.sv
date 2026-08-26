@@ -90,7 +90,7 @@ module combined_dma_npu_sram_top #(
     // Read-only visibility of the internal map stream for debug/verification.
     output wire        map_valid_o,
     output wire        map_ready_o,
-    output wire [63:0] map_data_o,
+    output wire [31:0] map_data_o,
     output wire [31:0] map_source_addr_o,
     output wire [4:0]  map_source_stride_o,
     output wire [ACT_ADDR_WIDTH-1:0] map_buffer_addr_o,
@@ -160,6 +160,8 @@ module combined_dma_npu_sram_top #(
         .ACTIVATION_WIDTH (ACTIVATION_WIDTH),
         .WEIGHT_WIDTH     (WEIGHT_WIDTH)
     ) adapter_i (
+        .clk_i                    (clk_i),
+        .rst_n                    (rst_n),
         .dma_act_port_grant_i    (dma_act_port_grant_i),
         .dma_weight_port_grant_i (dma_weight_port_grant_i),
         .array_active_i          (array_en),
