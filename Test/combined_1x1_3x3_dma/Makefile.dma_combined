@@ -12,7 +12,10 @@ PYTHON ?= python3
 
 RTL_SRCS := \
 	$(RTL_DIR)/combined_hwc_channel_dma_agu.sv \
-	$(RTL_DIR)/dma_a.v
+	$(RTL_DIR)/dma_a.v \
+	$(RTL_DIR)/dma_npu_sram_adapter.sv
+
+NPU_INTEGRATION_SRC := $(RTL_DIR)/combined_dma_npu_sram_top.sv
 
 UNIT_TB := $(TEST_DIR)/tb_combined_dma.sv
 MODEL_CHECK := $(TEST_DIR)/check_reference_schedules.py
@@ -36,37 +39,35 @@ CONV3_WEIGHTS_MEM ?= $(CONV3_MEM_DIR)/yolo_weights_3x3.mem
 CONV3_GOLDEN_MEM ?= $(CONV3_MEM_DIR)/golden_conv3.mem
 
 UNIT_VVP := $(BUILD_DIR)/tb_combined_dma.vvp
-INT1_VVP := $(BUILD_DIR)/tb_npu_yolo_combined_1x1_integrated.vvp
-INT3_VVP := $(BUILD_DIR)/tb_npu_yolo_combined_3x3_integrated.vvp
 SEQ_VVP := $(BUILD_DIR)/tb_npu_yolo_combined_sequential_integrated.vvp
 
-.PHONY: all sim unit model integrated integrated-1x1 integrated-3x3 \
-	integrated-sequential \
+.PHONY: all check packed-check ownership-check sim unit model integrated integrated-sequential \
 	check-tools check-npu-files check-conv1-mem check-conv3-mem clean help
 
-all: unit
+all: check
+
+check: model unit
+
+# Descriptive alias for CI jobs that specifically exercise the packed-source
+# long-burst revision.
+packed-check: check
+
+# The standalone RTL regression now instantiates the synthesizable NPU SRAM
+# adapter and deliberately removes grants/asserts array_active to verify that
+# map_ready and every physical write/shift enable are ownership-qualified.
+ownership-check: unit
 
 sim: unit
 
 unit: check-tools $(UNIT_VVP)
+	@echo "Running packed AXI burst and NPU SRAM ownership regression"
 	$(VVP) $(UNIT_VVP)
 
 model:
+	@echo "Checking packed descriptors and long-burst AXI read plan"
 	$(PYTHON) $(MODEL_CHECK)
 
-integrated: integrated-1x1 integrated-3x3 integrated-sequential
-
-integrated-1x1: check-tools check-npu-files check-conv1-mem $(INT1_VVP)
-	$(VVP) $(INT1_VVP) \
-		+IMAGE_MEM=$(abspath $(CONV1_IMAGE_MEM)) \
-		+WEIGHTS_MEM=$(abspath $(CONV1_WEIGHTS_MEM)) \
-		+GOLDEN_MEM=$(abspath $(CONV1_GOLDEN_MEM))
-
-integrated-3x3: check-tools check-npu-files check-conv3-mem $(INT3_VVP)
-	$(VVP) $(INT3_VVP) \
-		+IMAGE_MEM=$(abspath $(CONV3_IMAGE_MEM)) \
-		+WEIGHTS_MEM=$(abspath $(CONV3_WEIGHTS_MEM)) \
-		+GOLDEN_MEM=$(abspath $(CONV3_GOLDEN_MEM))
+integrated: integrated-sequential
 
 integrated-sequential: check-tools check-npu-files check-conv1-mem \
 	check-conv3-mem $(SEQ_VVP)
@@ -85,23 +86,11 @@ $(UNIT_VVP): $(RTL_SRCS) $(UNIT_TB) | $(BUILD_DIR)
 	$(IVERILOG) -g2012 -Wall -s tb_combined_dma \
 		-o $@ $(RTL_SRCS) $(UNIT_TB)
 
-$(INT1_VVP): $(RTL_SRCS) $(NPU_SRCS) \
-	$(TEST_DIR)/tb_npu_yolo_combined_1x1_integrated.sv | $(BUILD_DIR)
-	$(IVERILOG) -g2012 -Wall -s tb_npu_yolo_combined_1x1_integrated \
-		-o $@ $(RTL_SRCS) $(NPU_SRCS) \
-		$(TEST_DIR)/tb_npu_yolo_combined_1x1_integrated.sv
-
-$(INT3_VVP): $(RTL_SRCS) $(NPU_SRCS) \
-	$(TEST_DIR)/tb_npu_yolo_combined_3x3_integrated.sv | $(BUILD_DIR)
-	$(IVERILOG) -g2012 -Wall -s tb_npu_yolo_combined_3x3_integrated \
-		-o $@ $(RTL_SRCS) $(NPU_SRCS) \
-		$(TEST_DIR)/tb_npu_yolo_combined_3x3_integrated.sv
-
-$(SEQ_VVP): $(RTL_SRCS) $(NPU_SRCS) \
+$(SEQ_VVP): $(RTL_SRCS) $(NPU_INTEGRATION_SRC) $(NPU_SRCS) \
 	$(TEST_DIR)/tb_npu_yolo_combined_sequential_integrated.sv | $(BUILD_DIR)
 	$(IVERILOG) -g2012 -Wall \
 		-s tb_npu_yolo_combined_sequential_integrated \
-		-o $@ $(RTL_SRCS) $(NPU_SRCS) \
+		-o $@ $(RTL_SRCS) $(NPU_INTEGRATION_SRC) $(NPU_SRCS) \
 		$(TEST_DIR)/tb_npu_yolo_combined_sequential_integrated.sv
 
 check-tools:
@@ -133,9 +122,10 @@ clean:
 	rm -rf -- $(BUILD_DIR)
 
 help:
+	@echo "make -f Test/combined_1x1_3x3_dma/Makefile.dma_combined check"
+	@echo "make -f Test/combined_1x1_3x3_dma/Makefile.dma_combined packed-check"
+	@echo "make -f Test/combined_1x1_3x3_dma/Makefile.dma_combined ownership-check"
 	@echo "make -f Test/combined_1x1_3x3_dma/Makefile.dma_combined unit"
 	@echo "make -f Test/combined_1x1_3x3_dma/Makefile.dma_combined model"
 	@echo "make -f Test/combined_1x1_3x3_dma/Makefile.dma_combined integrated"
 	@echo "make -f Test/combined_1x1_3x3_dma/Makefile.dma_combined integrated-sequential"
-	@echo "make -f Test/combined_1x1_3x3_dma/Makefile.dma_combined integrated-1x1"
-	@echo "make -f Test/combined_1x1_3x3_dma/Makefile.dma_combined integrated-3x3"

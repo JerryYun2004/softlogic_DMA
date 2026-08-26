@@ -1,5 +1,11 @@
 `timescale 1ns / 1ps
 
+// FABulous DMA-only placement/resource-estimation wrapper with one CPU-facing
+// AXI4-Lite slave BEL and one DRAM-facing AXI4 master BEL.  This is not the
+// deployed DMA+NPU top: combined_dma_npu_sram_top.sv provides the synthesizable
+// ownership adapter and actual npu_sram_wrapper connections.  The packed-tile
+// DMA uses the master's read channel for 16-, 32-, and 34-beat INCR bursts; all
+// write-channel inputs to AXI_M_BEL are tied inactive.
 module top_wrapper;
 
     wire clk;
@@ -48,21 +54,37 @@ module top_wrapper;
     wire [9:0]  axil_araddr; wire axil_arvalid; wire axil_arready;
     wire [31:0] axil_rdata;  wire [1:0] axil_rresp; wire axil_rvalid; wire axil_rready;
 
-    // Protocol-neutral activation-load stream from the DMA AGU.  These nets are
-    // deliberately kept even though this synthesis wrapper has no SRAM/input-
-    // buffer adapter yet; otherwise Yosys may optimize away the address mapper.
+    // Read-only portion of the fabric AXI master BEL.
+    wire [31:0] m_axi_araddr;
+    wire [7:0]  m_axi_arlen;
+    wire [2:0]  m_axi_arsize;
+    wire [1:0]  m_axi_arburst;
+    wire        m_axi_arvalid;
+    wire        m_axi_arready;
+    wire [31:0] m_axi_rdata;
+    wire [1:0]  m_axi_rresp;
+    wire        m_axi_rlast;
+    wire        m_axi_rvalid;
+    wire        m_axi_rready;
+    wire        unused_m_axi_awready;
+    wire        unused_m_axi_wready;
+    wire [1:0]  unused_m_axi_bresp;
+    wire        unused_m_axi_bvalid;
+
+    // Synthetic sink used only to keep the isolated DMA datapath active for
+    // placement/resource estimation.  Never use this tie-high ready in the
+    // deployed accelerator; instantiate combined_dma_npu_sram_top instead.
     (* keep *) wire        map_valid;
+    (* keep *) wire [63:0] map_data;
     (* keep *) wire [31:0] map_source_addr;
+    (* keep *) wire [4:0]  map_source_stride;
     (* keep *) wire [8:0]  map_buffer_addr;
     (* keep *) wire [7:0]  map_bank_mask;
+    (* keep *) wire        map_is_weight;
     (* keep *) wire        map_zero_fill;
     (* keep *) wire        map_last;
-
-    // Synthesis/placement smoke-test behavior: accept one group command per
-    // cycle.  Replace this tie-high with downstream-adapter backpressure when
-    // the SRAM/input-buffer datapath is integrated.
-    wire map_ready;
-    assign map_ready = 1'b1;
+    (* keep *) wire        map_weight_swap;
+    wire map_ready = 1'b1;
 
     // ========================================================================
     // BEL Instantiations (SOC pins omitted, FAB pins flattened to match .list)
@@ -100,6 +122,145 @@ module top_wrapper;
         .FAB_ARADDR1(axil_araddr[1]), .FAB_ARADDR0(axil_araddr[0]), .FAB_ARVALID(axil_arvalid), .FAB_RREADY(axil_rready)
     );
 
+    // The PhD-provided generated wrapper places AXI_M_BEL four rows below the
+    // AXI-Lite slave (X0Y10.A -> X0Y6.A). This fabric uses the right-side AXI
+    // column, hence X11Y10.A -> X11Y6.A.
+    (* keep, BEL="X11Y6.A" *) AXI_M_BEL axi_m_bel_inst (
+        // Unused AXI write channels are held inactive.
+        .FAB_AWADDR0(1'b0),  .FAB_AWADDR1(1'b0),
+        .FAB_AWADDR2(1'b0),  .FAB_AWADDR3(1'b0),
+        .FAB_AWADDR4(1'b0),  .FAB_AWADDR5(1'b0),
+        .FAB_AWADDR6(1'b0),  .FAB_AWADDR7(1'b0),
+        .FAB_AWADDR8(1'b0),  .FAB_AWADDR9(1'b0),
+        .FAB_AWADDR10(1'b0), .FAB_AWADDR11(1'b0),
+        .FAB_AWADDR12(1'b0), .FAB_AWADDR13(1'b0),
+        .FAB_AWADDR14(1'b0), .FAB_AWADDR15(1'b0),
+        .FAB_AWADDR16(1'b0), .FAB_AWADDR17(1'b0),
+        .FAB_AWADDR18(1'b0), .FAB_AWADDR19(1'b0),
+        .FAB_AWADDR20(1'b0), .FAB_AWADDR21(1'b0),
+        .FAB_AWADDR22(1'b0), .FAB_AWADDR23(1'b0),
+        .FAB_AWADDR24(1'b0), .FAB_AWADDR25(1'b0),
+        .FAB_AWADDR26(1'b0), .FAB_AWADDR27(1'b0),
+        .FAB_AWADDR28(1'b0), .FAB_AWADDR29(1'b0),
+        .FAB_AWADDR30(1'b0), .FAB_AWADDR31(1'b0),
+        .FAB_AWLEN0(1'b0), .FAB_AWLEN1(1'b0),
+        .FAB_AWLEN2(1'b0), .FAB_AWLEN3(1'b0),
+        .FAB_AWLEN4(1'b0), .FAB_AWLEN5(1'b0),
+        .FAB_AWLEN6(1'b0), .FAB_AWLEN7(1'b0),
+        .FAB_AWSIZE0(1'b0), .FAB_AWSIZE1(1'b1),
+        .FAB_AWSIZE2(1'b0),
+        .FAB_AWBURST0(1'b1), .FAB_AWBURST1(1'b0),
+        .FAB_AWVALID(1'b0),
+        .FAB_WDATA0(1'b0),  .FAB_WDATA1(1'b0),
+        .FAB_WDATA2(1'b0),  .FAB_WDATA3(1'b0),
+        .FAB_WDATA4(1'b0),  .FAB_WDATA5(1'b0),
+        .FAB_WDATA6(1'b0),  .FAB_WDATA7(1'b0),
+        .FAB_WDATA8(1'b0),  .FAB_WDATA9(1'b0),
+        .FAB_WDATA10(1'b0), .FAB_WDATA11(1'b0),
+        .FAB_WDATA12(1'b0), .FAB_WDATA13(1'b0),
+        .FAB_WDATA14(1'b0), .FAB_WDATA15(1'b0),
+        .FAB_WDATA16(1'b0), .FAB_WDATA17(1'b0),
+        .FAB_WDATA18(1'b0), .FAB_WDATA19(1'b0),
+        .FAB_WDATA20(1'b0), .FAB_WDATA21(1'b0),
+        .FAB_WDATA22(1'b0), .FAB_WDATA23(1'b0),
+        .FAB_WDATA24(1'b0), .FAB_WDATA25(1'b0),
+        .FAB_WDATA26(1'b0), .FAB_WDATA27(1'b0),
+        .FAB_WDATA28(1'b0), .FAB_WDATA29(1'b0),
+        .FAB_WDATA30(1'b0), .FAB_WDATA31(1'b0),
+        .FAB_WSTRB0(1'b0), .FAB_WSTRB1(1'b0),
+        .FAB_WSTRB2(1'b0), .FAB_WSTRB3(1'b0),
+        .FAB_WLAST(1'b0), .FAB_WVALID(1'b0), .FAB_BREADY(1'b0),
+
+        // DMA AXI read address channel.
+        .FAB_ARADDR0(m_axi_araddr[0]),
+        .FAB_ARADDR1(m_axi_araddr[1]),
+        .FAB_ARADDR2(m_axi_araddr[2]),
+        .FAB_ARADDR3(m_axi_araddr[3]),
+        .FAB_ARADDR4(m_axi_araddr[4]),
+        .FAB_ARADDR5(m_axi_araddr[5]),
+        .FAB_ARADDR6(m_axi_araddr[6]),
+        .FAB_ARADDR7(m_axi_araddr[7]),
+        .FAB_ARADDR8(m_axi_araddr[8]),
+        .FAB_ARADDR9(m_axi_araddr[9]),
+        .FAB_ARADDR10(m_axi_araddr[10]),
+        .FAB_ARADDR11(m_axi_araddr[11]),
+        .FAB_ARADDR12(m_axi_araddr[12]),
+        .FAB_ARADDR13(m_axi_araddr[13]),
+        .FAB_ARADDR14(m_axi_araddr[14]),
+        .FAB_ARADDR15(m_axi_araddr[15]),
+        .FAB_ARADDR16(m_axi_araddr[16]),
+        .FAB_ARADDR17(m_axi_araddr[17]),
+        .FAB_ARADDR18(m_axi_araddr[18]),
+        .FAB_ARADDR19(m_axi_araddr[19]),
+        .FAB_ARADDR20(m_axi_araddr[20]),
+        .FAB_ARADDR21(m_axi_araddr[21]),
+        .FAB_ARADDR22(m_axi_araddr[22]),
+        .FAB_ARADDR23(m_axi_araddr[23]),
+        .FAB_ARADDR24(m_axi_araddr[24]),
+        .FAB_ARADDR25(m_axi_araddr[25]),
+        .FAB_ARADDR26(m_axi_araddr[26]),
+        .FAB_ARADDR27(m_axi_araddr[27]),
+        .FAB_ARADDR28(m_axi_araddr[28]),
+        .FAB_ARADDR29(m_axi_araddr[29]),
+        .FAB_ARADDR30(m_axi_araddr[30]),
+        .FAB_ARADDR31(m_axi_araddr[31]),
+        .FAB_ARLEN0(m_axi_arlen[0]), .FAB_ARLEN1(m_axi_arlen[1]),
+        .FAB_ARLEN2(m_axi_arlen[2]), .FAB_ARLEN3(m_axi_arlen[3]),
+        .FAB_ARLEN4(m_axi_arlen[4]), .FAB_ARLEN5(m_axi_arlen[5]),
+        .FAB_ARLEN6(m_axi_arlen[6]), .FAB_ARLEN7(m_axi_arlen[7]),
+        .FAB_ARSIZE0(m_axi_arsize[0]),
+        .FAB_ARSIZE1(m_axi_arsize[1]),
+        .FAB_ARSIZE2(m_axi_arsize[2]),
+        .FAB_ARBURST0(m_axi_arburst[0]),
+        .FAB_ARBURST1(m_axi_arburst[1]),
+        .FAB_ARVALID(m_axi_arvalid),
+        .FAB_RREADY(m_axi_rready),
+
+        // AXI responses from the hard master port back into the fabric.
+        .FAB_AWREADY(unused_m_axi_awready),
+        .FAB_WREADY(unused_m_axi_wready),
+        .FAB_BRESP0(unused_m_axi_bresp[0]),
+        .FAB_BRESP1(unused_m_axi_bresp[1]),
+        .FAB_BVALID(unused_m_axi_bvalid),
+        .FAB_ARREADY(m_axi_arready),
+        .FAB_RDATA0(m_axi_rdata[0]),
+        .FAB_RDATA1(m_axi_rdata[1]),
+        .FAB_RDATA2(m_axi_rdata[2]),
+        .FAB_RDATA3(m_axi_rdata[3]),
+        .FAB_RDATA4(m_axi_rdata[4]),
+        .FAB_RDATA5(m_axi_rdata[5]),
+        .FAB_RDATA6(m_axi_rdata[6]),
+        .FAB_RDATA7(m_axi_rdata[7]),
+        .FAB_RDATA8(m_axi_rdata[8]),
+        .FAB_RDATA9(m_axi_rdata[9]),
+        .FAB_RDATA10(m_axi_rdata[10]),
+        .FAB_RDATA11(m_axi_rdata[11]),
+        .FAB_RDATA12(m_axi_rdata[12]),
+        .FAB_RDATA13(m_axi_rdata[13]),
+        .FAB_RDATA14(m_axi_rdata[14]),
+        .FAB_RDATA15(m_axi_rdata[15]),
+        .FAB_RDATA16(m_axi_rdata[16]),
+        .FAB_RDATA17(m_axi_rdata[17]),
+        .FAB_RDATA18(m_axi_rdata[18]),
+        .FAB_RDATA19(m_axi_rdata[19]),
+        .FAB_RDATA20(m_axi_rdata[20]),
+        .FAB_RDATA21(m_axi_rdata[21]),
+        .FAB_RDATA22(m_axi_rdata[22]),
+        .FAB_RDATA23(m_axi_rdata[23]),
+        .FAB_RDATA24(m_axi_rdata[24]),
+        .FAB_RDATA25(m_axi_rdata[25]),
+        .FAB_RDATA26(m_axi_rdata[26]),
+        .FAB_RDATA27(m_axi_rdata[27]),
+        .FAB_RDATA28(m_axi_rdata[28]),
+        .FAB_RDATA29(m_axi_rdata[29]),
+        .FAB_RDATA30(m_axi_rdata[30]),
+        .FAB_RDATA31(m_axi_rdata[31]),
+        .FAB_RRESP0(m_axi_rresp[0]),
+        .FAB_RRESP1(m_axi_rresp[1]),
+        .FAB_RLAST(m_axi_rlast),
+        .FAB_RVALID(m_axi_rvalid)
+    );
+
     // ========================================================================
     // User Design Payload
     // ========================================================================
@@ -115,14 +276,26 @@ module top_wrapper;
         .axil_araddr(axil_araddr), .axil_arvalid(axil_arvalid), .axil_arready(axil_arready),
         .axil_rdata(axil_rdata),   .axil_rresp(axil_rresp),     .axil_rvalid(axil_rvalid),   .axil_rready(axil_rready),
 
-        // Protocol-neutral activation-load group command
+        // Read-only AXI4 master to off-chip DRAM
+        .m_axi_araddr(m_axi_araddr),   .m_axi_arlen(m_axi_arlen),
+        .m_axi_arsize(m_axi_arsize),   .m_axi_arburst(m_axi_arburst),
+        .m_axi_arvalid(m_axi_arvalid), .m_axi_arready(m_axi_arready),
+        .m_axi_rdata(m_axi_rdata),     .m_axi_rresp(m_axi_rresp),
+        .m_axi_rlast(m_axi_rlast),     .m_axi_rvalid(m_axi_rvalid),
+        .m_axi_rready(m_axi_rready),
+
+        // Fetched eight-byte group to the NPU-side adapter
         .map_valid(map_valid),
         .map_ready(map_ready),
+        .map_data(map_data),
         .map_source_addr(map_source_addr),
+        .map_source_stride(map_source_stride),
         .map_buffer_addr(map_buffer_addr),
         .map_bank_mask(map_bank_mask),
+        .map_is_weight(map_is_weight),
         .map_zero_fill(map_zero_fill),
-        .map_last(map_last)
+        .map_last(map_last),
+        .map_weight_swap(map_weight_swap)
     );
 
 endmodule

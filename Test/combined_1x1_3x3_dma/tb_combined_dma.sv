@@ -1,12 +1,13 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
-// Self-contained regression for the combined AXI4-Lite DMA.  It checks every
-// supported activation tile/channel block, all 3x3 weight taps, all 1x1 weight
-// slices, immediate mode switching, AXI AW/W ordering, partial configuration
-// writes, invalid accesses, busy rejection, command stability under
-// backpressure, halo zero-fill, lane stride, destination placement, last, and
-// weight-swap timing.
+// Self-contained regression for the combined AXI4-Lite + AXI4-read DMA. It
+// checks every supported activation tile/channel block, all 3x3 weight taps,
+// all 1x1 weight slices, immediate mode switching, AXI AW/W ordering, partial
+// configuration writes, invalid accesses, busy rejection, command stability
+// under backpressure, local halo zero-fill, packed-source addressing, long
+// 32-bit bursts, DRAM stalls, byte-lane unpacking, destination placement,
+// last, and weight-swap timing.
 module tb_combined_dma;
 
     localparam logic [31:0] IMAGE_BASE  = 32'h1000_0000;
@@ -40,8 +41,21 @@ module tb_combined_dma;
     wire         axil_rvalid;
     logic        axil_rready;
 
+    wire [31:0]  m_axi_araddr;
+    wire [7:0]   m_axi_arlen;
+    wire [2:0]   m_axi_arsize;
+    wire [1:0]   m_axi_arburst;
+    wire         m_axi_arvalid;
+    logic        m_axi_arready;
+    logic [31:0] m_axi_rdata;
+    logic [1:0]  m_axi_rresp;
+    logic        m_axi_rlast;
+    logic        m_axi_rvalid;
+    wire         m_axi_rready;
+
     wire         map_valid;
-    logic        map_ready;
+    wire         map_ready;
+    wire [63:0]  map_data;
     wire [31:0]  map_source_addr;
     wire [4:0]   map_source_stride;
     wire [8:0]   map_buffer_addr;
@@ -50,6 +64,20 @@ module tb_combined_dma;
     wire         map_zero_fill;
     wire         map_last;
     wire         map_weight_swap;
+
+    // Synthesizable NPU-side adapter signals.  The unit regression uses
+    // behavioral SRAM contents below, but drives them only from the exact ports
+    // that connect to npu_sram_wrapper in hardware.
+    logic        dma_act_port_grant;
+    logic        dma_weight_port_grant;
+    logic        array_active;
+    logic [7:0][8:0] act_compute_addr;
+    wire  [7:0]      ext_act_sram_we;
+    wire  [7:0][8:0] ext_act_sram_addr;
+    wire  [7:0][7:0] ext_act_sram_wdata;
+    wire  [7:0][7:0] weight_shift_in;
+    wire             weight_shift_en;
+    wire             swap_weights;
 
     integer errors;
     integer cycle_count;
@@ -83,6 +111,7 @@ module tb_combined_dma;
     logic [7:0] loaded_weight   [0:7][0:7];
 
     logic        stalled_command;
+    logic [63:0] held_data;
     logic [31:0] held_source_addr;
     logic [4:0]  held_source_stride;
     logic [8:0]  held_buffer_addr;
@@ -100,6 +129,23 @@ module tb_combined_dma;
     integer mon_lane;
     integer mon_expected_zero;
     logic [31:0] mon_expected_addr;
+
+    localparam integer DRAM_GAP_CYCLES = 6;
+    logic        dram_active_q;
+    logic [31:0] dram_addr_q;
+    integer      dram_beats_left_q;
+    integer      dram_gap_q;
+    integer      operation_axi_bursts;
+    integer      operation_axi_beats;
+    integer      expected_operation_axi_bursts;
+    integer      expected_operation_axi_beats;
+    integer      expected_row_beats_remaining;
+    integer      expected_rows_remaining;
+    logic [31:0] expected_next_araddr;
+    integer      mon_beats_to_4k;
+    integer      mon_expected_burst_beats;
+    integer      total_axi_bursts;
+    integer      total_axi_beats;
 
     dma_a dut (
         .clk               (clk),
@@ -122,8 +168,20 @@ module tb_combined_dma;
         .axil_rresp        (axil_rresp),
         .axil_rvalid       (axil_rvalid),
         .axil_rready       (axil_rready),
+        .m_axi_araddr      (m_axi_araddr),
+        .m_axi_arlen       (m_axi_arlen),
+        .m_axi_arsize      (m_axi_arsize),
+        .m_axi_arburst     (m_axi_arburst),
+        .m_axi_arvalid     (m_axi_arvalid),
+        .m_axi_arready     (m_axi_arready),
+        .m_axi_rdata       (m_axi_rdata),
+        .m_axi_rresp       (m_axi_rresp),
+        .m_axi_rlast       (m_axi_rlast),
+        .m_axi_rvalid      (m_axi_rvalid),
+        .m_axi_rready      (m_axi_rready),
         .map_valid         (map_valid),
         .map_ready         (map_ready),
+        .map_data          (map_data),
         .map_source_addr   (map_source_addr),
         .map_source_stride (map_source_stride),
         .map_buffer_addr   (map_buffer_addr),
@@ -132,6 +190,26 @@ module tb_combined_dma;
         .map_zero_fill     (map_zero_fill),
         .map_last          (map_last),
         .map_weight_swap   (map_weight_swap)
+    );
+
+    dma_npu_sram_adapter adapter_dut (
+        .dma_act_port_grant_i    (dma_act_port_grant),
+        .dma_weight_port_grant_i (dma_weight_port_grant),
+        .array_active_i          (array_active),
+        .map_valid_i             (map_valid),
+        .map_ready_o             (map_ready),
+        .map_data_i              (map_data),
+        .map_buffer_addr_i       (map_buffer_addr),
+        .map_bank_mask_i         (map_bank_mask),
+        .map_is_weight_i         (map_is_weight),
+        .map_weight_swap_i       (map_weight_swap),
+        .act_compute_addr_i      (act_compute_addr),
+        .ext_act_sram_we_o       (ext_act_sram_we),
+        .ext_act_sram_addr_o     (ext_act_sram_addr),
+        .ext_act_sram_wdata_o    (ext_act_sram_wdata),
+        .weight_shift_in_o       (weight_shift_in),
+        .weight_shift_en_o       (weight_shift_en),
+        .swap_weights_o          (swap_weights)
     );
 
     always #5 clk = ~clk;
@@ -143,6 +221,15 @@ module tb_combined_dma;
         end
     endfunction
 
+    function automatic [31:0] memory_word(input logic [31:0] address);
+        begin
+            memory_word = {
+                memory_byte(address + 3), memory_byte(address + 2),
+                memory_byte(address + 1), memory_byte(address)
+            };
+        end
+    endfunction
+
     task automatic record_error(input string message);
         begin
             errors = errors + 1;
@@ -151,17 +238,142 @@ module tb_combined_dma;
         end
     endtask
 
-    // Deterministic backpressure produces one- and multi-cycle stalls without
-    // making the regression dependent on a random seed.
+    // Deterministic ownership changes produce one- and multi-cycle stalls
+    // without making the regression dependent on a random seed.  array_active
+    // occasionally overlaps a requested grant to check the safety interlock.
     always @(negedge clk) begin
-        if (!rstn)
-            map_ready <= 1'b0;
-        else
-            map_ready <= ((cycle_count % 7) != 1) &&
-                         ((cycle_count % 11) != 4);
+        if (!rstn) begin
+            dma_act_port_grant    <= 1'b0;
+            dma_weight_port_grant <= 1'b0;
+            array_active          <= 1'b0;
+        end else if (operation_active) begin
+            // A swap is a non-stream sideband pulse.  The controller contract
+            // retains weight ownership through DMA done; force that condition
+            // here while still stalling ordinary weight groups above.
+            if (map_weight_swap) begin
+                dma_act_port_grant    <= 1'b0;
+                dma_weight_port_grant <= 1'b1;
+                array_active          <= 1'b0;
+            end else begin
+                array_active <= ((cycle_count % 17) == 3);
+                if (exp_weight) begin
+                    dma_act_port_grant <= 1'b0;
+                    dma_weight_port_grant <=
+                        ((cycle_count % 7) != 1) &&
+                        ((cycle_count % 11) != 4);
+                end else begin
+                    dma_act_port_grant <=
+                        ((cycle_count % 7) != 1) &&
+                        ((cycle_count % 11) != 4);
+                    dma_weight_port_grant <= 1'b0;
+                end
+            end
+        end else begin
+            dma_act_port_grant    <= 1'b0;
+            dma_weight_port_grant <= 1'b0;
+            array_active          <= 1'b0;
+        end
     end
 
-    // Command-level reference model and a behavioral eight-lane destination.
+    // 32-bit AXI DRAM model. Once a burst begins, R beats are consecutive
+    // whenever RREADY remains asserted; six idle cycles are inserted only
+    // between bursts. This makes a packed row amortize the request latency.
+    always @(posedge clk) begin
+        if (!rstn) begin
+            m_axi_arready    <= 1'b0;
+            m_axi_rdata      <= 32'd0;
+            m_axi_rresp      <= AXI_RESP_OKAY;
+            m_axi_rlast      <= 1'b0;
+            m_axi_rvalid     <= 1'b0;
+            dram_active_q    <= 1'b0;
+            dram_addr_q      <= 32'd0;
+            dram_beats_left_q <= 0;
+            dram_gap_q       <= 0;
+            operation_axi_bursts <= 0;
+            operation_axi_beats  <= 0;
+            total_axi_bursts <= 0;
+            total_axi_beats  <= 0;
+        end else begin
+            m_axi_arready <= !dram_active_q && !m_axi_rvalid &&
+                             (dram_gap_q == 0);
+
+            if (dram_gap_q > 0)
+                dram_gap_q <= dram_gap_q - 1;
+
+            if (m_axi_arvalid && m_axi_arready) begin
+                if (m_axi_araddr[1:0] != 2'b00)
+                    record_error("AXI ARADDR was not 32-bit aligned");
+                if (m_axi_arsize != 3'b010)
+                    record_error("AXI ARSIZE was not four bytes");
+                if (m_axi_arburst != 2'b01)
+                    record_error("AXI ARBURST was not INCR");
+                mon_beats_to_4k =
+                    (4096 - expected_next_araddr[11:0]) / 4;
+                mon_expected_burst_beats =
+                    (expected_row_beats_remaining < mon_beats_to_4k)
+                        ? expected_row_beats_remaining : mon_beats_to_4k;
+                if (m_axi_araddr != expected_next_araddr)
+                    record_error("packed row/slice burst address mismatch");
+                if ((m_axi_arlen + 1) != mon_expected_burst_beats)
+                    record_error("packed row/slice burst length mismatch");
+                if (({1'b0, m_axi_araddr[11:0]} +
+                     (({5'd0, m_axi_arlen} + 13'd1) << 2)) > 13'd4096)
+                    record_error("AXI burst crossed a 4 KiB boundary");
+
+                expected_next_araddr = expected_next_araddr +
+                                       mon_expected_burst_beats * 4;
+                if (expected_row_beats_remaining ==
+                    mon_expected_burst_beats) begin
+                    expected_rows_remaining = expected_rows_remaining - 1;
+                    if (expected_rows_remaining > 0)
+                        expected_row_beats_remaining = exp_weight ? 0 :
+                            (exp_conv_1x1 ? 32 : 34);
+                    else
+                        expected_row_beats_remaining = 0;
+                end else begin
+                    expected_row_beats_remaining =
+                        expected_row_beats_remaining -
+                        mon_expected_burst_beats;
+                end
+
+                dram_active_q     <= 1'b1;
+                dram_addr_q       <= m_axi_araddr;
+                dram_beats_left_q <= m_axi_arlen + 1;
+                m_axi_arready     <= 1'b0;
+                operation_axi_bursts <= operation_axi_bursts + 1;
+                total_axi_bursts  <= total_axi_bursts + 1;
+            end
+
+            if (dram_active_q && !m_axi_rvalid) begin
+                m_axi_rdata  <= memory_word(dram_addr_q);
+                m_axi_rresp  <= AXI_RESP_OKAY;
+                m_axi_rlast  <= (dram_beats_left_q == 1);
+                m_axi_rvalid <= 1'b1;
+            end
+
+            if (m_axi_rvalid && m_axi_rready) begin
+                operation_axi_beats <= operation_axi_beats + 1;
+                total_axi_beats     <= total_axi_beats + 1;
+
+                if (dram_beats_left_q == 1) begin
+                    m_axi_rvalid      <= 1'b0;
+                    m_axi_rlast       <= 1'b0;
+                    dram_active_q     <= 1'b0;
+                    dram_beats_left_q <= 0;
+                    dram_gap_q        <= DRAM_GAP_CYCLES;
+                end else begin
+                    dram_addr_q       <= dram_addr_q + 4;
+                    dram_beats_left_q <= dram_beats_left_q - 1;
+                    m_axi_rdata       <= memory_word(dram_addr_q + 4);
+                    m_axi_rlast       <= (dram_beats_left_q == 2);
+                    m_axi_rvalid      <= 1'b1;
+                end
+            end
+        end
+    end
+
+    // Fetched-group reference model. Destination data is sampled from the
+    // adapter's actual activation-SRAM and weight-shift output ports.
     always @(posedge clk) begin
         if (!rstn) begin
             cycle_count       = 0;
@@ -172,10 +384,40 @@ module tb_combined_dma;
         end else begin
             cycle_count = cycle_count + 1;
 
+            if (map_ready !==
+                (map_is_weight
+                    ? (dma_weight_port_grant && !array_active)
+                    : (dma_act_port_grant && !array_active)))
+                record_error("map_ready did not match ownership of the relevant NPU port");
+
+            if (swap_weights !==
+                (dma_weight_port_grant && !array_active &&
+                 map_weight_swap))
+                record_error("weight swap was not ownership-qualified");
+
+            for (mon_lane = 0; mon_lane < 8;
+                 mon_lane = mon_lane + 1) begin
+                if (dma_act_port_grant && !array_active) begin
+                    if (ext_act_sram_addr[mon_lane] !== map_buffer_addr)
+                        record_error("DMA did not own an activation SRAM address port after grant");
+                end else if (ext_act_sram_addr[mon_lane] !==
+                             act_compute_addr[mon_lane]) begin
+                    record_error("compute address was not restored when DMA lacked activation ownership");
+                end
+            end
+
+            if (!(map_valid && map_ready)) begin
+                if (ext_act_sram_we !== 8'h00)
+                    record_error("activation SRAM write occurred without a map handshake");
+                if (weight_shift_en)
+                    record_error("weight shift occurred without a map handshake");
+            end
+
             if (stalled_command) begin
                 if (!map_valid)
                     record_error("map_valid dropped while a command was stalled");
-                if ((map_source_addr   !== held_source_addr)   ||
+                if ((map_data          !== held_data)          ||
+                    (map_source_addr   !== held_source_addr)   ||
                     (map_source_stride !== held_source_stride) ||
                     (map_buffer_addr   !== held_buffer_addr)   ||
                     (map_bank_mask     !== held_bank_mask)     ||
@@ -187,6 +429,7 @@ module tb_combined_dma;
 
             if (map_valid && !map_ready) begin
                 if (!stalled_command) begin
+                    held_data          = map_data;
                     held_source_addr   = map_source_addr;
                     held_source_stride = map_source_stride;
                     held_buffer_addr   = map_buffer_addr;
@@ -210,49 +453,56 @@ module tb_combined_dma;
                         record_error("map_is_weight does not match the CPU command");
 
                     if (exp_weight) begin
-                        mon_tap = exp_conv_1x1 ? 0 : (exp_ky * 3 + exp_kx);
-                        mon_expected_addr = exp_base + mon_tap * 256 +
-                                            exp_cin * 128 + exp_cout * 8 +
-                                            (7 - command_count);
+                        mon_expected_addr = exp_base + command_count * 8;
 
                         if (map_source_addr !== mon_expected_addr)
                             record_error("weight source address mismatch");
-                        if (map_source_stride !== 5'd16)
-                            record_error("weight source lane stride must be 16");
+                        if (map_source_stride !== 5'd1)
+                            record_error("packed weight lane stride must be one");
                         if (map_buffer_addr !== command_count[8:0])
                             record_error("weight shift index mismatch");
                         if (map_zero_fill !== 1'b0)
                             record_error("weight command asserted zero fill");
                         if (map_last !== (command_count == 7))
                             record_error("weight last flag mismatch");
+                        if (!weight_shift_en)
+                            record_error("accepted weight map did not enable the NPU weight shifter");
+                        if (ext_act_sram_we !== 8'h00)
+                            record_error("weight map incorrectly wrote an activation SRAM");
 
                         for (mon_lane = 0; mon_lane < 8;
                              mon_lane = mon_lane + 1) begin
                             loaded_weight[mon_lane][7-command_count] =
-                                memory_byte(map_source_addr +
-                                            mon_lane * map_source_stride);
+                                weight_shift_in[mon_lane];
+                            if (weight_shift_in[mon_lane] !==
+                                memory_byte(map_source_addr + mon_lane))
+                                record_error("NPU weight-shift lane data mismatch");
                         end
                     end else begin
                         if (exp_conv_1x1) begin
                             mon_ly = command_count / 16;
                             mon_lx = command_count % 16;
-                            mon_gy = exp_tile_y * 16 + mon_ly;
-                            mon_gx = exp_tile_x * 16 + mon_lx;
+                            mon_expected_zero = 0;
+                            mon_expected_addr = exp_base + command_count * 8;
                         end else begin
                             mon_ly = command_count / 18;
                             mon_lx = command_count % 18;
-                            mon_gy = exp_tile_y * 16 + mon_ly - 1;
-                            mon_gx = exp_tile_x * 16 + mon_lx - 1;
+                            mon_expected_zero =
+                                ((!exp_tile_y && (mon_ly == 0)) ||
+                                 ( exp_tile_y && (mon_ly == 17)) ||
+                                 (!exp_tile_x && (mon_lx == 0)) ||
+                                 ( exp_tile_x && (mon_lx == 17)));
+                            mon_gy = mon_ly - (exp_tile_y ? 0 : 1);
+                            mon_gx = mon_lx - (exp_tile_x ? 0 : 1);
+                            mon_expected_addr = exp_base +
+                                                ((mon_gy * 17 + mon_gx) * 8);
                         end
 
-                        mon_offset = ((mon_gy * 32 + mon_gx) * 16) +
-                                     exp_cin * 8;
-                        mon_expected_addr = exp_base + mon_offset;
-                        mon_expected_zero = !exp_conv_1x1 &&
-                                            ((mon_gy < 0) || (mon_gy >= 32) ||
-                                             (mon_gx < 0) || (mon_gx >= 32));
-
-                        if (map_source_addr !== mon_expected_addr)
+                        // Zero groups do not access DRAM, so their source
+                        // metadata is informational. Every fetched group must
+                        // point to its packed eight-byte location exactly.
+                        if (!mon_expected_zero &&
+                            (map_source_addr !== mon_expected_addr))
                             record_error("activation source address mismatch");
                         if (map_source_stride !== 5'd1)
                             record_error("activation source lane stride must be one");
@@ -262,6 +512,10 @@ module tb_combined_dma;
                             record_error("activation halo zero-fill mismatch");
                         if (map_last !== (command_count == exp_commands-1))
                             record_error("activation last flag mismatch");
+                        if (ext_act_sram_we !== map_bank_mask)
+                            record_error("activation SRAM write enables did not match the bank mask");
+                        if (weight_shift_en)
+                            record_error("activation map incorrectly enabled the weight shifter");
 
                         if (map_zero_fill) begin
                             zero_count = zero_count + 1;
@@ -270,11 +524,13 @@ module tb_combined_dma;
 
                         for (mon_lane = 0; mon_lane < 8;
                              mon_lane = mon_lane + 1) begin
-                            if (map_zero_fill)
-                                activation_bank[mon_lane][command_count] = 8'd0;
-                            else
-                                activation_bank[mon_lane][command_count] =
-                                    memory_byte(map_source_addr + mon_lane);
+                            activation_bank[mon_lane][command_count] =
+                                ext_act_sram_wdata[mon_lane];
+                            if (ext_act_sram_wdata[mon_lane] !==
+                                (map_zero_fill
+                                    ? 8'd0
+                                    : memory_byte(map_source_addr + mon_lane)))
+                                record_error("activation SRAM write-data mismatch");
                         end
                     end
 
@@ -288,7 +544,7 @@ module tb_combined_dma;
                 end
             end
 
-            if (map_weight_swap) begin
+            if (swap_weights) begin
                 swap_count = swap_count + 1;
                 total_swaps = total_swaps + 1;
                 if (!operation_active || !exp_weight)
@@ -421,6 +677,12 @@ module tb_combined_dma;
     );
         integer r;
         integer p;
+        integer calc_rows;
+        integer calc_row_beats;
+        integer calc_beats_left;
+        integer calc_beats_to_4k;
+        integer calc_burst_beats;
+        logic [31:0] calc_addr;
         begin
             exp_conv_1x1 = conv_1x1[0];
             exp_weight   = load_weight[0];
@@ -439,6 +701,36 @@ module tb_combined_dma;
             zero_count        = 0;
             last_weight_cycle = -1000;
             operation_active  = 1'b1;
+            operation_axi_bursts = 0;
+            operation_axi_beats  = 0;
+            expected_operation_axi_bursts = 0;
+            expected_operation_axi_beats = load_weight ? 16 :
+                                           (conv_1x1 ? 512 : 578);
+            expected_next_araddr = base_address;
+            expected_rows_remaining = load_weight ? 1 :
+                                      (conv_1x1 ? 16 : 17);
+            expected_row_beats_remaining = load_weight ? 16 :
+                                           (conv_1x1 ? 32 : 34);
+
+            // Count the exact legal bursts, including any activation row
+            // divided at a 4 KiB boundary.
+            calc_rows = expected_rows_remaining;
+            calc_row_beats = expected_row_beats_remaining;
+            calc_addr = base_address;
+            for (r = 0; r < calc_rows; r = r + 1) begin
+                calc_beats_left = calc_row_beats;
+                while (calc_beats_left > 0) begin
+                    calc_beats_to_4k =
+                        (4096 - calc_addr[11:0]) / 4;
+                    calc_burst_beats =
+                        (calc_beats_left < calc_beats_to_4k)
+                            ? calc_beats_left : calc_beats_to_4k;
+                    expected_operation_axi_bursts =
+                        expected_operation_axi_bursts + 1;
+                    calc_addr = calc_addr + calc_burst_beats * 4;
+                    calc_beats_left = calc_beats_left - calc_burst_beats;
+                end
+            end
 
             if (load_weight) begin
                 for (r = 0; r < 8; r = r + 1)
@@ -481,12 +773,20 @@ module tb_combined_dma;
             if (zero_count != ((!exp_weight && !exp_conv_1x1) ? 35 : 0))
                 record_error("operation zero-fill command count mismatch");
 
+            if (operation_axi_bursts != expected_operation_axi_bursts)
+                record_error("operation AXI burst count mismatch");
+            if (operation_axi_beats != expected_operation_axi_beats)
+                record_error("operation AXI beat count mismatch");
+            if ((expected_rows_remaining != 0) ||
+                (expected_row_beats_remaining != 0))
+                record_error("AXI row/slice burst scoreboard did not finish");
+
             if (exp_weight) begin
-                tap = exp_conv_1x1 ? 0 : (exp_ky * 3 + exp_kx);
                 for (r = 0; r < 8; r = r + 1) begin
                     for (p = 0; p < 8; p = p + 1) begin
-                        address = exp_base + tap * 256 + exp_cin * 128 +
-                                  exp_cout * 8 + r * 16 + p;
+                        // Packed group zero is output column seven, followed
+                        // by columns six through zero.
+                        address = exp_base + (7-p) * 8 + r;
                         expected_data = memory_byte(address);
                         if (loaded_weight[r][p] !== expected_data)
                             record_error("loaded 8x8 weight data mismatch");
@@ -497,19 +797,20 @@ module tb_combined_dma;
                     if (exp_conv_1x1) begin
                         ly = p / 16;
                         lx = p % 16;
-                        gy = exp_tile_y * 16 + ly;
-                        gx = exp_tile_x * 16 + lx;
+                        expected_zero = 0;
+                        address = exp_base + p * 8;
                     end else begin
                         ly = p / 18;
                         lx = p % 18;
-                        gy = exp_tile_y * 16 + ly - 1;
-                        gx = exp_tile_x * 16 + lx - 1;
+                        expected_zero =
+                            ((!exp_tile_y && (ly == 0)) ||
+                             ( exp_tile_y && (ly == 17)) ||
+                             (!exp_tile_x && (lx == 0)) ||
+                             ( exp_tile_x && (lx == 17)));
+                        gy = ly - (exp_tile_y ? 0 : 1);
+                        gx = lx - (exp_tile_x ? 0 : 1);
+                        address = exp_base + ((gy * 17 + gx) * 8);
                     end
-                    offset = ((gy * 32 + gx) * 16) + exp_cin * 8;
-                    address = exp_base + offset;
-                    expected_zero = !exp_conv_1x1 &&
-                                    ((gy < 0) || (gy >= 32) ||
-                                     (gx < 0) || (gx >= 32));
 
                     for (r = 0; r < 8; r = r + 1) begin
                         expected_data = expected_zero
@@ -546,7 +847,10 @@ module tb_combined_dma;
             config_word[6:5] = kernel_y[1:0];
             config_word[8:7] = kernel_x[1:0];
             config_word[9]   = conv_1x1[0];
-            base_address = load_weight ? WEIGHT_BASE : IMAGE_BASE;
+            // Every operation receives its own packed pointer. Activation
+            // objects are page-spaced; weight objects are 64-byte aligned.
+            base_address = (load_weight ? WEIGHT_BASE : IMAGE_BASE) +
+                           operation_count * 32'h0000_1000;
             order = operation_count % 3;
 
             prepare_operation(conv_1x1, load_weight, tile_y, tile_x,
@@ -560,11 +864,38 @@ module tb_combined_dma;
             axil_write_expect(10'h000, base_address, 4'hf,
                               (order + 1) % 3, AXI_RESP_OKAY);
 
-            wait_for_busy_then_done(2000);
+            wait_for_busy_then_done(10000);
             @(negedge clk);
             verify_operation_data();
             if (O_top[3] !== 1'b0)
                 record_error("successful operation left error_sticky set");
+
+            operation_active = 1'b0;
+            operation_count = operation_count + 1;
+        end
+    endtask
+
+    task automatic test_4k_boundary_split;
+        logic [31:0] config_word;
+        logic [31:0] split_base;
+        begin
+            $display("Checking an activation row split at the AXI 4 KiB boundary...");
+            config_word = 32'd0;
+            config_word[9] = 1'b1;
+            split_base = IMAGE_BASE + 32'h0000_0fc0;
+
+            prepare_operation(1, 0, 0, 0, 0, 0, 0, 0, split_base);
+            axil_write_expect(10'h008, config_word, 4'hf,
+                              0, AXI_RESP_OKAY);
+            axil_write_expect(10'h000, split_base, 4'hf,
+                              1, AXI_RESP_OKAY);
+            wait_for_busy_then_done(10000);
+            @(negedge clk);
+            verify_operation_data();
+            if (expected_operation_axi_bursts != 17)
+                record_error("4 KiB split test did not predict 17 bursts");
+            if (O_top[3] !== 1'b0)
+                record_error("4 KiB split operation set error_sticky");
 
             operation_active = 1'b0;
             operation_count = operation_count + 1;
@@ -593,7 +924,7 @@ module tb_combined_dma;
             axil_write_expect(10'h000, 32'hdead_beef, 4'hf,
                               0, AXI_RESP_SLVERR);
 
-            wait_for_busy_then_done(2000);
+            wait_for_busy_then_done(10000);
             @(negedge clk);
             verify_operation_data();
             if (O_top[3] !== 1'b1)
@@ -645,7 +976,11 @@ module tb_combined_dma;
         axil_araddr  = 10'd0;
         axil_arvalid = 1'b0;
         axil_rready  = 1'b1;
-        map_ready    = 1'b0;
+        dma_act_port_grant    = 1'b0;
+        dma_weight_port_grant = 1'b0;
+        array_active          = 1'b0;
+        for (ty = 0; ty < 8; ty = ty + 1)
+            act_compute_addr[ty] = 9'h100 + ty;
 
         errors          = 0;
         cycle_count     = 0;
@@ -663,13 +998,18 @@ module tb_combined_dma;
         expected_total_commands   = 0;
         expected_total_zero_commands = 0;
         expected_total_swaps      = 0;
+        expected_operation_axi_bursts = 0;
+        expected_operation_axi_beats = 0;
+        expected_row_beats_remaining = 0;
+        expected_rows_remaining = 0;
+        expected_next_araddr = 32'd0;
 
         repeat (5) @(posedge clk);
         @(negedge clk);
         rstn = 1'b1;
 
         $display("============================================================");
-        $display(" COMBINED 1x1 / 3x3 DMA AXI + LOADING-ALGORITHM REGRESSION");
+        $display(" COMBINED PACKED 1x1 / 3x3 LONG-BURST DMA REGRESSION");
         $display("============================================================");
 
         axil_read_expect(10'h000, AXI_RESP_OKAY, 32'd0);
@@ -687,6 +1027,25 @@ module tb_combined_dma;
         axil_read_expect(10'h008, AXI_RESP_OKAY, 32'h0000_035a);
         axil_write_expect(10'h008, 32'd0, 4'hf, 0, AXI_RESP_OKAY);
 
+        // Packed activation pointers must be eight-byte aligned. The DMA
+        // splits a row only when necessary to obey AXI's 4 KiB rule.
+        axil_write_expect(10'h000, IMAGE_BASE + 1, 4'hf,
+                          1, AXI_RESP_SLVERR);
+        if (O_top[2] !== 1'b0)
+            record_error("misaligned source base unexpectedly started DMA");
+        axil_write_expect(10'h000, IMAGE_BASE + 4, 4'hf,
+                          2, AXI_RESP_SLVERR);
+
+        // A packed 64-byte weight slice is required to be 64-byte aligned so
+        // it is always fetched by exactly one 16-beat burst.
+        axil_write_expect(10'h008, 32'h0000_0208, 4'hf,
+                          0, AXI_RESP_OKAY);
+        axil_write_expect(10'h000, WEIGHT_BASE + 8, 4'hf,
+                          1, AXI_RESP_SLVERR);
+        if (O_top[2] !== 1'b0)
+            record_error("misaligned packed weight pointer started DMA");
+        axil_write_expect(10'h008, 32'd0, 4'hf, 2, AXI_RESP_OKAY);
+
         // Explicitly switch 3x3 -> 1x1 -> 3x3 -> 1x1 without reset or
         // reconfiguration of the fabric.
         $display("Checking immediate CPU-selected mode switching...");
@@ -695,6 +1054,7 @@ module tb_combined_dma;
         run_operation(0, 1, 0, 0, 1, 1, 2, 2);
         run_operation(1, 1, 0, 0, 0, 1, 0, 0);
 
+        test_4k_boundary_split();
         test_busy_rejection();
         test_mode_specific_kernel_validation();
 
@@ -732,12 +1092,14 @@ module tb_combined_dma;
         $display("------------------------------------------------------------");
         $display("Operations checked       : %0d", operation_count);
         $display("Map commands checked     : %0d", total_commands);
+        $display("AXI read bursts checked  : %0d", total_axi_bursts);
+        $display("AXI read beats checked   : %0d", total_axi_beats);
         $display("3x3 zero-fill commands   : %0d", total_zero_commands);
         $display("Weight swaps checked     : %0d", total_swaps);
         $display("Simulation cycles        : %0d", cycle_count);
 
         if (errors == 0) begin
-            $display("PASS: combined DMA matches all 1x1 and 3x3 loading schedules");
+            $display("PASS: packed DMA and ownership-qualified NPU SRAM adapter match all schedules");
             $finish;
         end else begin
             $display("FAIL: %0d errors", errors);
@@ -746,7 +1108,7 @@ module tb_combined_dma;
     end
 
     initial begin : timeout_watchdog
-        repeat (100000) @(posedge clk);
+        repeat (250000) @(posedge clk);
         $fatal(1, "FAIL: combined DMA regression timed out");
     end
 
