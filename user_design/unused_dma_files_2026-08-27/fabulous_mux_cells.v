@@ -1,3 +1,6 @@
+// legacy code, tried to force synthesis to MUX instead of LC for balancing utility purposes.
+// Didn't work
+
 `ifndef FABULOUS_MUX_CELLS_V
 `define FABULOUS_MUX_CELLS_V
 

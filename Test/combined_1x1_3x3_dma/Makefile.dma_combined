@@ -12,6 +12,10 @@ PYTHON ?= python3
 
 RTL_SRCS := \
 	$(RTL_DIR)/combined_hwc_channel_dma_agu.sv \
+	$(RTL_DIR)/dma_axil_control.v \
+	$(RTL_DIR)/dma_axi_burst_planner.v \
+	$(RTL_DIR)/dma_map_datapath.v \
+	$(RTL_DIR)/dma_fetch_engine.v \
 	$(RTL_DIR)/dma_a.v \
 	$(RTL_DIR)/dma_npu_sram_adapter.sv
 

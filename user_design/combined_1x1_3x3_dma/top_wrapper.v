@@ -76,8 +76,11 @@ module top_wrapper;
     // deployed accelerator; instantiate combined_dma_npu_sram_top instead.
     (* keep *) wire        map_valid;
     (* keep *) wire [31:0] map_data;
-    (* keep *) wire [31:0] map_source_addr;
-    (* keep *) wire [4:0]  map_source_stride;
+    // Source address/stride are verification-only metadata.  The hardware
+    // instance below disables them so the isolated resource estimate matches
+    // the deployed datapath instead of retaining a monitor-only 32-bit adder.
+    wire [31:0] map_source_addr;
+    wire [4:0]  map_source_stride;
     (* keep *) wire [8:0]  map_buffer_addr;
     (* keep *) wire [7:0]  map_bank_mask;
     (* keep *) wire        map_is_weight;
@@ -264,7 +267,9 @@ module top_wrapper;
     // ========================================================================
     // User Design Payload
     // ========================================================================
-    dma_a user_logic (
+    dma_a #(
+        .MAP_SOURCE_METADATA (0)
+    ) user_logic (
         .clk(clk),
         .rstn(sys_rstn),
         .O_top(fabric_debug_out),

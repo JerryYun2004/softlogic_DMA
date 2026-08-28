@@ -3,9 +3,9 @@
 // FABulous DMA-only placement/resource-estimation wrapper with one CPU-facing
 // AXI4-Lite slave BEL and one DRAM-facing AXI4 master BEL.  This is not the
 // deployed DMA+NPU top: combined_dma_npu_sram_top.sv provides the synthesizable
-// ownership adapter and actual npu_sram_wrapper connections.  The packed-tile
-// DMA uses the master's read channel for 16-, 32-, and 34-beat INCR bursts; all
-// write-channel inputs to AXI_M_BEL are tied inactive.
+// ownership adapter and actual npu_sram_wrapper connections. The DMA uses the
+// master's read channel for packed 16-/32-/34-beat bursts and raw-HWC16
+// 62-/66-beat 4N-2 row bursts; all AXI write-channel inputs remain inactive.
 module top_wrapper;
 
     wire clk;

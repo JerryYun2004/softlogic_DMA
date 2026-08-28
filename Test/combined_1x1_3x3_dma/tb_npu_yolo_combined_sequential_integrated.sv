@@ -310,7 +310,8 @@ module tb_npu_yolo_combined_sequential_integrated;
         .ACT_HALO_PAD     (ACT_HALO_PAD),
         .ACTIVATION_WIDTH (ACTIVATION_WIDTH),
         .WEIGHT_WIDTH     (WEIGHT_WIDTH),
-        .PSUM_WIDTH       (PSUM_WIDTH)
+        .PSUM_WIDTH       (PSUM_WIDTH),
+        .DMA_MAP_SOURCE_METADATA (1)
     ) subsystem_dut (
         .clk_i              (clk_i),
         .rst_n              (rst_n),

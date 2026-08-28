@@ -150,7 +150,9 @@ module tb_combined_dma;
     integer      total_axi_bursts;
     integer      total_axi_beats;
 
-    dma_a dut (
+    dma_a #(
+        .MAP_SOURCE_METADATA (1)
+    ) dut (
         .clk               (clk),
         .rstn              (rstn),
         .O_top             (O_top),
