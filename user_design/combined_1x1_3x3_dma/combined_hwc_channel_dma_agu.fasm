@@ -2500,7 +2500,7 @@ X2Y7.S1END3.JW2BEG6
 X2Y7.W2BEG6.W2MID6
 X2Y7.JW2BEG6.JW2END6
 
-# routing for net '$abc$6481$flatten\user_logic.\fetch_engine_i.\map_datapath_i.$logic_or$/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/dma_map_datapath.v:135$223_Y_new_inv'
+# routing for net '$abc$6481$flatten\user_logic.\fetch_engine_i.\map_datapath_i.$logic_or$/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/dma_map_datapath.v:176$223_Y_new_inv'
 
 X2Y5.JS2END3.S2BEG3
 X2Y5.LC_O.JS2BEG3
@@ -3377,7 +3377,7 @@ X5Y6.N1BEG0.N1END0
 X5Y6.N2BEG6.N2MID6
 X5Y6.JN2BEG6.JN2END6
 
-# routing for net '$abc$6481$flatten\user_logic.\fetch_engine_i.\burst_planner_i.$lt$/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/dma_axi_burst_planner.v:25$237.CO[0]_new'
+# routing for net '$abc$6481$flatten\user_logic.\fetch_engine_i.\burst_planner_i.$lt$/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/dma_axi_burst_planner.v:50$237.CO[0]_new'
 
 X3Y5.JE2END7.E2BEG7
 X3Y5.LD_O.JE2BEG7
@@ -3477,7 +3477,7 @@ X4Y5.N1BEG1.N1END1
 X4Y5.JS2BEG3.JS2END3
 X4Y5.J_l_EF_BEG2.J_l_EF_END2
 
-# routing for net '$abc$6481$flatten\user_logic.\fetch_engine_i.\burst_planner_i.$lt$/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/dma_axi_burst_planner.v:25$237.CO[1]_new_inv'
+# routing for net '$abc$6481$flatten\user_logic.\fetch_engine_i.\burst_planner_i.$lt$/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/dma_axi_burst_planner.v:50$237.CO[1]_new_inv'
 
 X4Y4.J2MID_CDa_END2.LD_I2
 X4Y4.N2MID4.J2MID_CDa_BEG2
@@ -3487,7 +3487,7 @@ X4Y5.LB_O.JN2BEG4
 X4Y5.N2BEG4.N2MID4
 X4Y5.JN2BEG4.JN2END4
 
-# routing for net '$abc$6481$techmap$techmap1124$flatten\user_logic.\fetch_engine_i.\burst_planner_i.$lt$/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/dma_axi_burst_planner.v:25$237.$and$/nix/store/6s5yppv17pwkdm7m8rsrm6hvpf255c5a-yosys-with-plugins-0.62/bin/../share/yosys/cmp2lcu.v:103$1120_Y_new'
+# routing for net '$abc$6481$techmap$techmap1124$flatten\user_logic.\fetch_engine_i.\burst_planner_i.$lt$/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/dma_axi_burst_planner.v:50$237.$and$/nix/store/6s5yppv17pwkdm7m8rsrm6hvpf255c5a-yosys-with-plugins-0.62/bin/../share/yosys/cmp2lcu.v:103$1120_Y_new'
 
 X4Y4.J_l_EF_END0.LF_I0
 X4Y4.LG_O.JN2BEG3
@@ -4113,7 +4113,7 @@ X3Y5.N1BEG0.N1END0
 X3Y5.JE2BEG4.JE2END4
 X3Y5.J_l_GH_BEG1.J_l_GH_END1
 
-# routing for net '$abc$6481$flatten\user_logic.\agu_i.$logic_and$/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/combined_hwc_channel_dma_agu.sv:114$86_Y_new'
+# routing for net '$abc$6481$flatten\user_logic.\agu_i.$logic_and$/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/combined_hwc_channel_dma_agu.sv:149$86_Y_new'
 
 X3Y2.J_l_AB_END0.LA_I0
 X3Y2.J_l_AB_END0.LB_I0
@@ -5297,7 +5297,7 @@ X11Y10.AXIL_S_IO_E_3_BASE_TO_TOP10.AXIL_S_FAB_WREADY
 # routing for net '$abc$6481$auto$rtlil.cc:3583:MuxGate$5984'
 
 
-# routing for net '$abc$6481$flatten\user_logic.\axil_control_i.$logic_and$/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/dma_axil_control.v:173$152_Y_new'
+# routing for net '$abc$6481$flatten\user_logic.\axil_control_i.$logic_and$/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/dma_axil_control.v:214$152_Y_new'
 
 X6Y6.JE2END5.E2BEG5
 X6Y6.J2MID_ABb_END0.LB_I0
@@ -5647,7 +5647,7 @@ X11Y10.AXIL_S_IO_E_3_BASE_TO_TOP11.AXIL_S_FAB_AWREADY
 # routing for net '$abc$6481$auto$rtlil.cc:3583:MuxGate$5972'
 
 
-# routing for net '$abc$6481$flatten\user_logic.\axil_control_i.$logic_and$/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/dma_axil_control.v:169$147_Y_new'
+# routing for net '$abc$6481$flatten\user_logic.\axil_control_i.$logic_and$/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/dma_axil_control.v:210$147_Y_new'
 
 X6Y9.J_l_AB_END1.LB_I1
 X6Y9.N1END0.JE2BEG1
@@ -8505,7 +8505,7 @@ X4Y8.J2MID_GHa_BEG2.J2MID_GHa_END2
 X4Y8.JS2BEG1.JS2END1
 X4Y8.JS2BEG6.JS2END6
 
-# routing for net '$abc$6481$flatten\user_logic.\axil_control_i.$logic_or$/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/dma_axil_control.v:135$134_Y_new_inv'
+# routing for net '$abc$6481$flatten\user_logic.\axil_control_i.$logic_or$/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/dma_axil_control.v:167$134_Y_new_inv'
 
 X4Y8.J2MID_GHa_END3.LG_I3
 X4Y8.JW2END6.J2MID_GHa_BEG3
@@ -8917,7 +8917,7 @@ X10Y11.S2END0.N2BEGb7
 X10Y11.N2BEGb7.N2END7
 X11Y10.AXIL_S_FAB_AWADDR4.AXIL_S_IO_E_3_TOP_TO_BASE10
 
-# routing for net '$abc$6481$techmap$flatten\user_logic.\axil_control_i.$procmux$241.$reduce_or$/nix/store/6s5yppv17pwkdm7m8rsrm6hvpf255c5a-yosys-with-plugins-0.62/bin/../share/yosys/techmap.v:605$2735_Y_new'
+# routing for net '$abc$6481$techmap$flatten\user_logic.\axil_control_i.$procmux$241.$reduce_or$/nix/store/6s5yppv17pwkdm7m8rsrm6hvpf255c5a-yosys-with-plugins-0.62/bin/../share/yosys/techmap.v:605$2734_Y_new'
 
 X4Y10.JE2END0.E2BEG0
 X4Y10.JE2END2.E2BEG2
@@ -8983,7 +8983,7 @@ X6Y11.NN4BEG3.NN4END3
 # routing for net '$abc$6481$auto$rtlil.cc:3583:MuxGate$5782'
 
 
-# routing for net '$abc$6481$techmap$flatten\user_logic.\axil_control_i.$procmux$338.$reduce_or$/nix/store/6s5yppv17pwkdm7m8rsrm6hvpf255c5a-yosys-with-plugins-0.62/bin/../share/yosys/techmap.v:605$2354_Y_new'
+# routing for net '$abc$6481$techmap$flatten\user_logic.\axil_control_i.$procmux$338.$reduce_or$/nix/store/6s5yppv17pwkdm7m8rsrm6hvpf255c5a-yosys-with-plugins-0.62/bin/../share/yosys/techmap.v:605$2353_Y_new'
 
 X4Y9.J_l_CD_END3.LC_I3
 X4Y9.W2END3.JW2BEG2
@@ -10996,7 +10996,7 @@ X5Y10.JW2BEG5.JW2END5
 X5Y11.SS4END15.NN4BEG0
 X5Y11.NN4BEG0.NN4END0
 
-# routing for net '$abc$6481$flatten\user_logic.\axil_control_i.$logic_and$/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/dma_axil_control.v:244$176_Y_new'
+# routing for net '$abc$6481$flatten\user_logic.\axil_control_i.$logic_and$/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/dma_axil_control.v:299$176_Y_new'
 
 X6Y6.J_l_AB_END0.E1BEG3
 X6Y6.WW4END0.J_l_AB_BEG0
@@ -11333,7 +11333,7 @@ X10Y9.LE_O.JS2BEG6
 X10Y9.J2MID_GHa_BEG2.J2MID_GHa_END2
 X10Y9.JS2BEG6.JS2END6
 
-# routing for net '$abc$6481$auto$simplemap.cc:277:simplemap_eqne$2604_new_inv'
+# routing for net '$abc$6481$auto$simplemap.cc:277:simplemap_eqne$2603_new_inv'
 
 X5Y7.JS2END5.S2BEG5
 X5Y7.N2END6.JS2BEG5
@@ -11403,7 +11403,7 @@ X5Y10.J2MID_CDb_BEG0.J2MID_CDb_END0
 X4Y11.S2END4.N2BEGb3
 X4Y11.N2BEGb3.N2END3
 
-# routing for net '$abc$6481$auto$simplemap.cc:189:logic_reduce$2583_new_inv'
+# routing for net '$abc$6481$auto$simplemap.cc:189:logic_reduce$2582_new_inv'
 
 X6Y9.J_l_EF_END0.LE_I0
 X6Y9.LA_O.JN2BEG3
@@ -15273,7 +15273,7 @@ X10Y4.LD_O.JN2BEG5
 X10Y4.N2BEG5.N2MID5
 X10Y4.JN2BEG5.JN2END5
 
-# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1167.CO[26]_new'
+# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1170.CO[26]_new'
 
 X10Y3.J_l_AB_END0.LA_I0
 X10Y3.J_l_AB_END0.LB_I0
@@ -15363,7 +15363,7 @@ X10Y4.JN2BEG1.JN2END1
 X10Y4.JN2BEG3.JN2END3
 X10Y4.J_l_AB_BEG0.J_l_AB_END0
 
-# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1167.Y[26]_new'
+# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1170.Y[26]_new'
 
 X9Y3.J_l_AB_END0.LB_I0
 X9Y3.LD_O.JN2BEG1
@@ -15447,7 +15447,7 @@ X10Y3.JS2END2.J_l_CD_BEG2
 X10Y3.JS2BEG2.JS2END2
 X10Y3.J_l_CD_BEG2.J_l_CD_END2
 
-# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1167.CO[23]_new'
+# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1170.CO[23]_new'
 
 X9Y3.JE2END6.E2BEG6
 X9Y3.J2MID_CDb_END2.LD_I2
@@ -15478,7 +15478,7 @@ X10Y4.J2MID_EFb_END1.LE_I1
 X10Y4.E2MID3.J2MID_EFb_BEG1
 X10Y4.J2MID_EFb_BEG1.J2MID_EFb_END1
 
-# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1167.Y[24]_new'
+# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1170.Y[24]_new'
 
 X9Y4.JS2END7.S2BEG7
 X9Y4.LB_O.JS2BEG7
@@ -15634,7 +15634,7 @@ X9Y4.JS2END4.J_l_GH_BEG2
 X9Y4.JS2BEG4.JS2END4
 X9Y4.J_l_GH_BEG2.J_l_GH_END2
 
-# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1167.CO[22]_new'
+# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1170.CO[22]_new'
 
 X9Y4.J_l_GH_END0.LH_I0
 X9Y4.LF_O.JN2BEG4
@@ -15682,7 +15682,7 @@ X9Y4.JS2BEG3.JS2END3
 X9Y4.JW2BEG4.JW2END4
 X9Y4.J_l_GH_BEG3.J_l_GH_END3
 
-# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1167.Y[22]_new'
+# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1170.Y[22]_new'
 
 X9Y5.J_l_CD_END2.LD_I2
 X9Y5.LB_O.JS2BEG2
@@ -15773,7 +15773,7 @@ X9Y5.J2MID_GHa_BEG0.J2MID_GHa_END0
 X9Y5.JN2BEG6.JN2END6
 X9Y5.JE2BEG3.JE2END3
 
-# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1167.Y[21]_new'
+# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1170.Y[21]_new'
 
 X8Y5.J2MID_EFa_END2.LF_I2
 X8Y5.JS2END5.J2MID_EFa_BEG2
@@ -15865,7 +15865,7 @@ X9Y5.J2MID_ABb_END3.LB_I3
 X9Y5.E2MID1.J2MID_ABb_BEG3
 X9Y5.J2MID_ABb_BEG3.J2MID_ABb_END3
 
-# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1167.CO[20]_new'
+# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1170.CO[20]_new'
 
 X9Y4.JE2END0.S1BEG1
 X9Y4.JS2END6.S2BEG6
@@ -15896,7 +15896,7 @@ X9Y5.W2BEG6.W2MID6
 X9Y5.J2MID_ABa_BEG0.J2MID_ABa_END0
 X9Y5.JW2BEG6.JW2END6
 
-# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1167.Y[20]_new'
+# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1170.Y[20]_new'
 
 X9Y3.J_l_EF_END1.LF_I1
 X9Y3.N1END2.JE2BEG3
@@ -16002,7 +16002,7 @@ X9Y4.S2MID0.J2MID_EFa_BEG3
 X9Y4.J2MID_CDa_BEG2.J2MID_CDa_END2
 X9Y4.J2MID_EFa_BEG3.J2MID_EFa_END3
 
-# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1167.Y[19]_new'
+# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1170.Y[19]_new'
 
 X8Y5.J_l_AB_END3.LB_I3
 X8Y5.LA_O.JW2BEG1
@@ -16089,7 +16089,7 @@ X8Y5.JS2BEG1.JS2END1
 X8Y5.JW2BEG4.JW2END4
 X8Y5.J_l_AB_BEG2.J_l_AB_END2
 
-# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1167.CO[18]_new'
+# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1170.CO[18]_new'
 
 X8Y4.LF_O.E1BEG2
 X8Y4.JS2END7.S2BEG7
@@ -16187,7 +16187,7 @@ X9Y4.J2MID_CDb_END3.LD_I3
 X9Y4.E2MID1.J2MID_CDb_BEG3
 X9Y4.J2MID_CDb_BEG3.J2MID_CDb_END3
 
-# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1167.CO[17]_new'
+# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1170.CO[17]_new'
 
 X8Y4.JE2END7.E2BEG7
 X8Y4.J_l_EF_END3.LE_I3
@@ -16378,7 +16378,7 @@ X8Y4.J2MID_CDa_BEG2.J2MID_CDa_END2
 X8Y4.J2MID_ABb_BEG2.J2MID_ABb_END2
 X8Y4.JN2BEG5.JN2END5
 
-# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1167.CO[15]_new'
+# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1170.CO[15]_new'
 
 X8Y3.JS2END0.S2BEG0
 X8Y3.J_l_AB_END3.LA_I3
@@ -16486,7 +16486,7 @@ X8Y4.J2MID_ABb_END1.LA_I1
 X8Y4.S2MID3.J2MID_ABb_BEG1
 X8Y4.J2MID_ABb_BEG1.J2MID_ABb_END1
 
-# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1167.CO[14]_new'
+# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1170.CO[14]_new'
 
 X7Y3.JE2END2.E2BEG2
 X7Y3.LG_O.S1BEG2
@@ -16691,7 +16691,7 @@ X7Y3.J2MID_GHb_END1.LG_I1
 X7Y3.S2MID3.J2MID_GHb_BEG1
 X7Y3.J2MID_GHb_BEG1.J2MID_GHb_END1
 
-# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1167.CO[12]_new'
+# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1170.CO[12]_new'
 
 X7Y2.J_l_EF_END3.LF_I3
 X7Y2.J_l_GH_END3.LG_I3
@@ -16777,7 +16777,7 @@ X7Y3.J2MID_GHb_END2.LG_I2
 X7Y3.S2MID5.J2MID_GHb_BEG2
 X7Y3.J2MID_GHb_BEG2.J2MID_GHb_END2
 
-# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1167.CO[11]_new'
+# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1170.CO[11]_new'
 
 X6Y2.JE2END0.E2BEG0
 X6Y2.N1END3.JE2BEG0
@@ -16895,7 +16895,7 @@ X7Y3.J2MID_GHa_BEG1.J2MID_GHa_END1
 X7Y3.JE2BEG6.JE2END6
 X7Y3.JW2BEG1.JW2END1
 
-# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1167.CO[9]_new'
+# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1170.CO[9]_new'
 
 X6Y4.JE2END1.E2BEG1
 X6Y4.JE2END7.E2BEG7
@@ -16983,7 +16983,7 @@ X7Y4.JE2BEG4.JE2END4
 X7Y4.J_l_CD_BEG1.J_l_CD_END1
 X7Y4.J_l_GH_BEG1.J_l_GH_END1
 
-# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1167.CO[8]_new'
+# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1170.CO[8]_new'
 
 X6Y3.J2END_AB_END0.LB_I0
 X6Y3.N2END6.J2END_AB_BEG0
@@ -17194,7 +17194,7 @@ X6Y6.LA_O.JN2BEG3
 X6Y6.N2BEG3.N2MID3
 X6Y6.JN2BEG3.JN2END3
 
-# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1167.CO[7]_new'
+# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1170.CO[7]_new'
 
 X5Y5.LD_O.E1BEG0
 X5Y5.JE2END1.E2BEG1
@@ -17294,7 +17294,7 @@ X7Y5.JW2BEG4.JW2END4
 X7Y5.JW2BEG6.JW2END6
 X7Y5.J_l_AB_BEG3.J_l_AB_END3
 
-# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1167.CO[5]_new'
+# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1170.CO[5]_new'
 
 X6Y4.JS2END3.S2BEG3
 X6Y4.N2END4.JS2BEG3
@@ -17385,7 +17385,7 @@ X6Y5.JW2END2.J_l_CD_BEG3
 X6Y5.JW2BEG2.JW2END2
 X6Y5.J_l_CD_BEG3.J_l_CD_END3
 
-# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1167.Y[5]_new'
+# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1170.Y[5]_new'
 
 X5Y7.J_l_AB_END0.LB_I0
 X5Y7.LC_O.JN2BEG1
@@ -17457,7 +17457,7 @@ X5Y7.LB_O.JN2BEG7
 X5Y7.N2BEG7.N2MID7
 X5Y7.JN2BEG7.JN2END7
 
-# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1167.Y[4]_new_inv'
+# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1170.Y[4]_new_inv'
 
 X5Y7.J_l_CD_END3.LD_I3
 X5Y7.LE_O.JW2BEG2
@@ -17536,7 +17536,7 @@ X5Y7.LD_O.JN2BEG2
 X5Y7.N2BEG2.N2MID2
 X5Y7.JN2BEG2.JN2END2
 
-# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1167.CO[2]_new'
+# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1170.CO[2]_new'
 
 X3Y6.JN2END3.E1BEG0
 X3Y6.LH_O.S1BEG3
@@ -17653,7 +17653,7 @@ X5Y7.LA_O.JN2BEG4
 X5Y7.N2BEG4.N2MID4
 X5Y7.JN2BEG4.JN2END4
 
-# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1167.Y[2]_new'
+# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1170.Y[2]_new'
 
 X3Y7.J2MID_EFa_END2.LF_I2
 X3Y7.JS2END5.J2MID_EFa_BEG2
@@ -17738,7 +17738,7 @@ X3Y7.LF_O.JN2BEG1
 X3Y7.N2BEG1.N2MID1
 X3Y7.JN2BEG1.JN2END1
 
-# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1167.Y[1]_new'
+# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1170.Y[1]_new'
 
 X3Y7.J_l_CD_END3.LD_I3
 X3Y7.LA_O.JW2BEG2
@@ -17920,7 +17920,7 @@ X1Y9.JE2END2.J_l_CD_BEG1
 X1Y9.JE2BEG2.JE2END2
 X1Y9.J_l_CD_BEG1.J_l_CD_END1
 
-# routing for net '$abc$6481$flatten\user_logic.\agu_i.$logic_or$/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/combined_hwc_channel_dma_agu.sv:121$99_Y_new_inv'
+# routing for net '$abc$6481$flatten\user_logic.\agu_i.$logic_or$/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/combined_hwc_channel_dma_agu.sv:158$99_Y_new_inv'
 
 X1Y6.J2MID_GHb_END2.LH_I2
 X1Y6.N2MID5.J2MID_GHb_BEG2
@@ -17947,7 +17947,7 @@ X2Y8.J2MID_ABa_END0.LA_I0
 X2Y8.S2MID6.J2MID_ABa_BEG0
 X2Y8.J2MID_ABa_BEG0.J2MID_ABa_END0
 
-# routing for net '$abc$6481$flatten\user_logic.\axil_control_i.$logic_or$/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/dma_axil_control.v:185$155_Y_new_inv'
+# routing for net '$abc$6481$flatten\user_logic.\axil_control_i.$logic_or$/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/dma_axil_control.v:231$155_Y_new_inv'
 
 X2Y7.J_l_GH_END3.LH_I3
 X2Y7.N1END1.JW2BEG4
@@ -18870,7 +18870,7 @@ X2Y5.J_l_CD_END1.LC_I1
 X2Y5.E2END2.J_l_CD_BEG1
 X2Y5.J_l_CD_BEG1.J_l_CD_END1
 
-# routing for net '$abc$6481$flatten\user_logic.\fetch_engine_i.\map_datapath_i.$logic_and$/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/dma_map_datapath.v:135$216_Y_new'
+# routing for net '$abc$6481$flatten\user_logic.\fetch_engine_i.\map_datapath_i.$logic_and$/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/dma_map_datapath.v:176$216_Y_new'
 
 X2Y4.J2MID_CDa_END3.LD_I3
 X2Y4.W2MID0.J2MID_CDa_BEG3
@@ -19905,7 +19905,7 @@ X3Y9.SS4END1.J_l_EF_BEG2
 X3Y9.N1BEG1.N1END1
 X3Y9.J_l_EF_BEG2.J_l_EF_END2
 
-# routing for net '$abc$6481$flatten\user_logic.\fetch_engine_i.\map_datapath_i.$logic_or$/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/dma_map_datapath.v:145$234_Y_new_inv'
+# routing for net '$abc$6481$flatten\user_logic.\fetch_engine_i.\map_datapath_i.$logic_or$/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/dma_map_datapath.v:195$234_Y_new_inv'
 
 X3Y4.J_l_CD_END0.LC_I0
 X3Y4.LD_O.JN2BEG2
@@ -20688,7 +20688,7 @@ X2Y5.J2MID_CDa_BEG1.J2MID_CDa_END1
 # routing for net '$abc$6481$auto$rtlil.cc:3583:MuxGate$5324'
 
 
-# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1170.Y[4]_new_inv'
+# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1164.Y[4]_new_inv'
 
 X2Y6.J_l_AB_END3.LA_I3
 X2Y6.N1END0.JW2BEG1
@@ -20750,7 +20750,7 @@ X2Y6.LF_O.JS2BEG4
 X2Y6.J2MID_CDa_BEG2.J2MID_CDa_END2
 X2Y6.JS2BEG4.JS2END4
 
-# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1170.CO[1]_new_inv'
+# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1164.CO[1]_new_inv'
 
 X2Y6.J2MID_EFa_END2.LE_I2
 X2Y6.J2MID_EFa_END2.LF_I2
@@ -20857,7 +20857,7 @@ X1Y8.JW2BEG1.JW2END1
 X1Y8.JW2BEG3.JW2END3
 X1Y8.J_l_EF_BEG3.J_l_EF_END3
 
-# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1170.Y[1]_new'
+# routing for net '$abc$6481$auto$alumacc.cc:512:replace_alu$1164.Y[1]_new'
 
 X2Y6.J2MID_GHb_END3.LG_I3
 X2Y6.N2MID1.J2MID_GHb_BEG3
@@ -25043,7 +25043,7 @@ X9Y11.N1BEG0.N1END0
 X9Y11.N2BEG0.N2MID0
 X9Y11.NN4BEG3.NN4END3
 
-# routing for net '$abc$6481$flatten\user_logic.\axil_control_i.$logic_not$/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/dma_axil_control.v:169$146_Y_new_inv'
+# routing for net '$abc$6481$flatten\user_logic.\axil_control_i.$logic_not$/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/dma_axil_control.v:210$146_Y_new_inv'
 
 X3Y9.J2MID_GHb_END2.LH_I2
 X3Y9.W2MID5.J2MID_GHb_BEG2

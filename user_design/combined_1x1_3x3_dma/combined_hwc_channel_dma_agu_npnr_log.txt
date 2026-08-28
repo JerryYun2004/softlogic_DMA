@@ -3,7 +3,7 @@ Info: Reading BELs file: /.FABulous/bel.v3.txt
 Info: Reading PIPs file: /.FABulous/pips.txt
 
 Info: No PCF file specified, skipping constraints application.
-Info: Checksum: 0xf4b16671
+Info: Checksum: 0x5c47e5fb
 
 Info: Device utilisation:
 Info: 	         FABULOUS_LC:     736/    800    92%
@@ -40,7 +40,7 @@ Info: Running simulated annealing placer for refinement.
 Info:   at iteration #1: temp = 0.000000, timing cost = 1031, wirelen = 2055
 Info:   at iteration #5: temp = 0.000000, timing cost = 778, wirelen = 1988
 Info:   at iteration #8: temp = 0.000000, timing cost = 733, wirelen = 1930 
-Info: SA placement time 0.19s
+Info: SA placement time 0.20s
 
 Info: Max frequency for clock 'clk': 9.76 MHz (FAIL at 12.00 MHz)
 
@@ -67,7 +67,7 @@ Info: [ 57634,  62434) |**********+
 Info: [ 62434,  67234) |*****+
 Info: [ 67234,  72034) |**+
 Info: [ 72034,  76834) |************************************************************ 
-Info: Checksum: 0xbb8d02f3
+Info: Checksum: 0xf4fce2be
 
 Info: Routing..
 Info: Setting up routing queue.
@@ -76,31 +76,31 @@ Info:            |   (re-)routed arcs  |   delta    | remaining|       time spen
 Info:    IterCnt |  w/ripup   wo/ripup |  w/r  wo/r |      arcs| batch(sec) total(sec)|
 Info:       1000 |      194        805 |  194   805 |      2243|       0.13       0.13|
 Info:       2000 |      596       1403 |  402   598 |      1740|       0.13       0.26|
-Info:       3000 |     1125       1874 |  529   471 |      1439|       0.13       0.38|
-Info:       4000 |     1726       2273 |  601   399 |      1239|       0.20       0.58|
-Info:       5000 |     2341       2658 |  615   385 |      1042|       0.18       0.77|
-Info:       6000 |     3012       2987 |  671   329 |       909|       0.24       1.01|
-Info:       7000 |     3649       3350 |  637   363 |       767|       0.26       1.27|
-Info:       8000 |     4321       3678 |  672   328 |       661|       0.26       1.53|
-Info:       9000 |     5049       3950 |  728   272 |       593|       0.23       1.76|
-Info:      10000 |     5778       4221 |  729   271 |       524|       0.26       2.03|
-Info:      11000 |     6517       4482 |  739   261 |       445|       0.23       2.26|
-Info:      12000 |     7266       4733 |  749   251 |       400|       0.31       2.57|
-Info:      13000 |     7989       5010 |  723   277 |       337|       0.23       2.80|
-Info:      14000 |     8742       5257 |  753   247 |       250|       0.35       3.15|
-Info:      15000 |     9522       5477 |  780   220 |       213|       0.24       3.39|
-Info:      16000 |    10309       5690 |  787   213 |       166|       0.32       3.70|
-Info:      17000 |    11074       5925 |  765   235 |       136|       0.27       3.98|
-Info:      18000 |    11848       6151 |  774   226 |       130|       0.44       4.42|
-Info:      19000 |    12608       6391 |  760   240 |        74|       0.43       4.85|
-Info:      20000 |    13383       6616 |  775   225 |        49|       0.42       5.27|
-Info:      21000 |    14142       6857 |  759   241 |        39|       0.29       5.56|
-Info:      22000 |    14913       7086 |  771   229 |        19|       0.19       5.74|
-Info:      23000 |    15666       7333 |  753   247 |        28|       0.40       6.15|
-Info:      23232 |    15827       7405 |  161    72 |         0|       0.20       6.35|
+Info:       3000 |     1125       1874 |  529   471 |      1439|       0.14       0.40|
+Info:       4000 |     1726       2273 |  601   399 |      1239|       0.15       0.55|
+Info:       5000 |     2341       2658 |  615   385 |      1042|       0.19       0.74|
+Info:       6000 |     3012       2987 |  671   329 |       909|       0.25       0.99|
+Info:       7000 |     3649       3350 |  637   363 |       767|       0.27       1.27|
+Info:       8000 |     4321       3678 |  672   328 |       661|       0.28       1.55|
+Info:       9000 |     5049       3950 |  728   272 |       593|       0.25       1.80|
+Info:      10000 |     5778       4221 |  729   271 |       524|       0.29       2.09|
+Info:      11000 |     6517       4482 |  739   261 |       445|       0.25       2.34|
+Info:      12000 |     7266       4733 |  749   251 |       400|       0.41       2.76|
+Info:      13000 |     7989       5010 |  723   277 |       337|       0.24       3.00|
+Info:      14000 |     8742       5257 |  753   247 |       250|       0.38       3.38|
+Info:      15000 |     9522       5477 |  780   220 |       213|       0.31       3.69|
+Info:      16000 |    10309       5690 |  787   213 |       166|       0.35       4.04|
+Info:      17000 |    11074       5925 |  765   235 |       136|       0.30       4.34|
+Info:      18000 |    11848       6151 |  774   226 |       130|       0.68       5.03|
+Info:      19000 |    12608       6391 |  760   240 |        74|       0.54       5.56|
+Info:      20000 |    13383       6616 |  775   225 |        49|       0.50       6.06|
+Info:      21000 |    14142       6857 |  759   241 |        39|       0.32       6.38|
+Info:      22000 |    14913       7086 |  771   229 |        19|       0.21       6.59|
+Info:      23000 |    15666       7333 |  753   247 |        28|       0.48       7.06|
+Info:      23232 |    15827       7405 |  161    72 |         0|       0.23       7.29|
 Info: Routing complete.
-Info: Router1 time 6.35s
-Info: Checksum: 0xf2bd71ff
+Info: Router1 time 7.29s
+Info: Checksum: 0xced5e58c
 
 Info: Critical path report for clock 'clk' (posedge -> posedge):
 Info:       type curr  total name
@@ -108,60 +108,60 @@ Info:   clk-to-q  1.00  1.00 Source $abc$6481$auto$blifparse.cc:557:parse_blif$6
 Info:    routing  3.90  4.90 Net user_logic.agu_i.conv_1x1_q (3,7) -> (3,6)
 Info:                          Sink $abc$6481$auto$blifparse.cc:557:parse_blif$6551.I0
 Info:                          Defined in:
-Info:                               /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/combined_hwc_channel_dma_agu.sv:72.32-72.42
+Info:                               /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/combined_hwc_channel_dma_agu.sv:91.32-91.42
 Info:      logic  3.00  7.90 Source $abc$6481$auto$blifparse.cc:557:parse_blif$6551.O
-Info:    routing  4.50  12.40 Net $abc$6481$auto$alumacc.cc:512:replace_alu$1167.CO[2]_new (3,6) -> (5,6)
+Info:    routing  4.50  12.40 Net $abc$6481$auto$alumacc.cc:512:replace_alu$1170.CO[2]_new (3,6) -> (5,6)
 Info:                          Sink $abc$6481$auto$blifparse.cc:557:parse_blif$6560.I1
 Info:                          Defined in:
-Info:                               /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/combined_hwc_channel_dma_agu.sv:161.47-164.68
+Info:                               /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/combined_hwc_channel_dma_agu.sv:204.47-207.68
 Info:                               /nix/store/6s5yppv17pwkdm7m8rsrm6hvpf255c5a-yosys-with-plugins-0.62/bin/../share/yosys/techmap.v:274.23-274.25
 Info:      logic  3.00  15.40 Source $abc$6481$auto$blifparse.cc:557:parse_blif$6560.O
-Info:    routing  3.70  19.10 Net $abc$6481$auto$alumacc.cc:512:replace_alu$1167.CO[5]_new (5,6) -> (6,5)
+Info:    routing  3.70  19.10 Net $abc$6481$auto$alumacc.cc:512:replace_alu$1170.CO[5]_new (5,6) -> (6,5)
 Info:                          Sink $abc$6481$auto$blifparse.cc:557:parse_blif$6571.I0
 Info:                          Defined in:
-Info:                               /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/combined_hwc_channel_dma_agu.sv:161.47-164.68
+Info:                               /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/combined_hwc_channel_dma_agu.sv:204.47-207.68
 Info:                               /nix/store/6s5yppv17pwkdm7m8rsrm6hvpf255c5a-yosys-with-plugins-0.62/bin/../share/yosys/techmap.v:274.23-274.25
 Info:      logic  3.00  22.10 Source $abc$6481$auto$blifparse.cc:557:parse_blif$6571.O
-Info:    routing  3.70  25.80 Net $abc$6481$auto$alumacc.cc:512:replace_alu$1167.CO[8]_new (6,5) -> (6,3)
+Info:    routing  3.70  25.80 Net $abc$6481$auto$alumacc.cc:512:replace_alu$1170.CO[8]_new (6,5) -> (6,3)
 Info:                          Sink $abc$6481$auto$blifparse.cc:557:parse_blif$6579.I0
 Info:                          Defined in:
-Info:                               /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/combined_hwc_channel_dma_agu.sv:161.47-164.68
+Info:                               /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/combined_hwc_channel_dma_agu.sv:204.47-207.68
 Info:                               /nix/store/6s5yppv17pwkdm7m8rsrm6hvpf255c5a-yosys-with-plugins-0.62/bin/../share/yosys/techmap.v:274.23-274.25
 Info:      logic  3.00  28.80 Source $abc$6481$auto$blifparse.cc:557:parse_blif$6579.O
-Info:    routing  2.90  31.70 Net $abc$6481$auto$alumacc.cc:512:replace_alu$1167.CO[11]_new (6,3) -> (7,3)
+Info:    routing  2.90  31.70 Net $abc$6481$auto$alumacc.cc:512:replace_alu$1170.CO[11]_new (6,3) -> (7,3)
 Info:                          Sink $abc$6481$auto$blifparse.cc:557:parse_blif$6591.I0
 Info:                          Defined in:
-Info:                               /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/combined_hwc_channel_dma_agu.sv:161.47-164.68
+Info:                               /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/combined_hwc_channel_dma_agu.sv:204.47-207.68
 Info:                               /nix/store/6s5yppv17pwkdm7m8rsrm6hvpf255c5a-yosys-with-plugins-0.62/bin/../share/yosys/techmap.v:274.23-274.25
 Info:      logic  3.00  34.70 Source $abc$6481$auto$blifparse.cc:557:parse_blif$6591.O
-Info:    routing  3.70  38.40 Net $abc$6481$auto$alumacc.cc:512:replace_alu$1167.CO[14]_new (7,3) -> (8,4)
+Info:    routing  3.70  38.40 Net $abc$6481$auto$alumacc.cc:512:replace_alu$1170.CO[14]_new (7,3) -> (8,4)
 Info:                          Sink $abc$6481$auto$blifparse.cc:557:parse_blif$6602.I0
 Info:                          Defined in:
-Info:                               /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/combined_hwc_channel_dma_agu.sv:161.47-164.68
+Info:                               /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/combined_hwc_channel_dma_agu.sv:204.47-207.68
 Info:                               /nix/store/6s5yppv17pwkdm7m8rsrm6hvpf255c5a-yosys-with-plugins-0.62/bin/../share/yosys/techmap.v:274.23-274.25
 Info:      logic  3.00  41.40 Source $abc$6481$auto$blifparse.cc:557:parse_blif$6602.O
-Info:    routing  2.90  44.30 Net $abc$6481$auto$alumacc.cc:512:replace_alu$1167.CO[17]_new (8,4) -> (9,4)
+Info:    routing  2.90  44.30 Net $abc$6481$auto$alumacc.cc:512:replace_alu$1170.CO[17]_new (8,4) -> (9,4)
 Info:                          Sink $abc$6481$auto$blifparse.cc:557:parse_blif$6612.I0
 Info:                          Defined in:
-Info:                               /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/combined_hwc_channel_dma_agu.sv:161.47-164.68
+Info:                               /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/combined_hwc_channel_dma_agu.sv:204.47-207.68
 Info:                               /nix/store/6s5yppv17pwkdm7m8rsrm6hvpf255c5a-yosys-with-plugins-0.62/bin/../share/yosys/techmap.v:274.23-274.25
 Info:      logic  3.00  47.30 Source $abc$6481$auto$blifparse.cc:557:parse_blif$6612.O
-Info:    routing  2.10  49.40 Net $abc$6481$auto$alumacc.cc:512:replace_alu$1167.CO[20]_new (9,4) -> (9,4)
+Info:    routing  2.10  49.40 Net $abc$6481$auto$alumacc.cc:512:replace_alu$1170.CO[20]_new (9,4) -> (9,4)
 Info:                          Sink $abc$6481$auto$blifparse.cc:557:parse_blif$6626.I0
 Info:                          Defined in:
-Info:                               /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/combined_hwc_channel_dma_agu.sv:161.47-164.68
+Info:                               /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/combined_hwc_channel_dma_agu.sv:204.47-207.68
 Info:                               /nix/store/6s5yppv17pwkdm7m8rsrm6hvpf255c5a-yosys-with-plugins-0.62/bin/../share/yosys/techmap.v:274.23-274.25
 Info:      logic  3.00  52.40 Source $abc$6481$auto$blifparse.cc:557:parse_blif$6626.O
-Info:    routing  4.50  56.90 Net $abc$6481$auto$alumacc.cc:512:replace_alu$1167.CO[23]_new (9,4) -> (10,3)
+Info:    routing  4.50  56.90 Net $abc$6481$auto$alumacc.cc:512:replace_alu$1170.CO[23]_new (9,4) -> (10,3)
 Info:                          Sink $abc$6481$auto$blifparse.cc:557:parse_blif$6632.I0
 Info:                          Defined in:
-Info:                               /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/combined_hwc_channel_dma_agu.sv:161.47-164.68
+Info:                               /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/combined_hwc_channel_dma_agu.sv:204.47-207.68
 Info:                               /nix/store/6s5yppv17pwkdm7m8rsrm6hvpf255c5a-yosys-with-plugins-0.62/bin/../share/yosys/techmap.v:274.23-274.25
 Info:      logic  3.00  59.90 Source $abc$6481$auto$blifparse.cc:557:parse_blif$6632.O
-Info:    routing  2.10  62.00 Net $abc$6481$auto$alumacc.cc:512:replace_alu$1167.CO[26]_new (10,3) -> (10,3)
+Info:    routing  2.10  62.00 Net $abc$6481$auto$alumacc.cc:512:replace_alu$1170.CO[26]_new (10,3) -> (10,3)
 Info:                          Sink $abc$6481$auto$blifparse.cc:557:parse_blif$7185.I1
 Info:                          Defined in:
-Info:                               /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/combined_hwc_channel_dma_agu.sv:161.47-164.68
+Info:                               /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/combined_hwc_channel_dma_agu.sv:204.47-207.68
 Info:                               /nix/store/6s5yppv17pwkdm7m8rsrm6hvpf255c5a-yosys-with-plugins-0.62/bin/../share/yosys/techmap.v:274.23-274.25
 Info:      logic  3.00  65.00 Source $abc$6481$auto$blifparse.cc:557:parse_blif$7185.O
 Info:    routing  2.10  67.10 Net $abc$6481$new_n1399 (10,3) -> (10,3)

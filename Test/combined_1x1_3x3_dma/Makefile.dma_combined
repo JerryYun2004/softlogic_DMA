@@ -39,8 +39,12 @@ NPU_SRCS ?= \
 	$(NPU_RTL_DIR)/sram_bank.sv \
 	$(NPU_RTL_DIR)/npu_sram_wrapper.sv
 
-CONV1_MEM_DIR ?= $(REPO_ROOT)/Test/conv_1x1
-CONV3_MEM_DIR ?= $(REPO_ROOT)/Test/conv_3x3
+# The integrated verification vectors live beside this Makefile and the
+# testbenches. Deriving both roots from TEST_DIR keeps these paths valid when
+# the repository is cloned or moved, while still allowing command-line
+# overrides such as `CONV1_MEM_DIR=/path/to/vectors`.
+CONV1_MEM_DIR ?= $(TEST_DIR)
+CONV3_MEM_DIR ?= $(TEST_DIR)
 CONV1_IMAGE_MEM ?= $(CONV1_MEM_DIR)/yolo_conv1_in.mem
 CONV1_WEIGHTS_MEM ?= $(CONV1_MEM_DIR)/yolo_conv1_w.mem
 CONV1_GOLDEN_MEM ?= $(CONV1_MEM_DIR)/golden_conv1.mem
