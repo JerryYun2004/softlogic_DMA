@@ -1,0 +1,154 @@
+8.37. Printing statistics.
+
+=== $paramod$41b6751ee50836ba3c18db89aa47baa96b3a761f\combined_hwc_channel_dma_agu ===
+
+        +----------Local Count, excluding submodules.
+        | 
+      198 wires
+      361 wire bits
+       37 public wires
+      200 public wire bits
+       29 ports
+      148 port bits
+      224 cells
+        2   LUT1
+       17   LUT2
+       50   LUT3
+      111   LUT4
+       44   LUTFF
+
+=== $paramod\dma_fetch_engine\MAP_SOURCE_METADATA=s32'00000000000000000000000000000000 ===
+
+        +----------Local Count, excluding submodules.
+        | 
+      298 wires
+      622 wire bits
+       61 public wires
+      385 public wire bits
+       39 ports
+      248 port bits
+      328 cells
+       15   LUT2
+       67   LUT3
+      162   LUT4
+       84   LUTFF
+        2 submodules
+        1   $paramod\dma_map_datapath\MAP_SOURCE_METADATA=s32'00000000000000000000000000000000
+        1   dma_axi_burst_planner
+
+=== $paramod\dma_map_datapath\MAP_SOURCE_METADATA=s32'00000000000000000000000000000000 ===
+
+        +----------Local Count, excluding submodules.
+        | 
+       96 wires
+      293 wire bits
+       36 public wires
+      233 public wire bits
+       33 ports
+      212 port bits
+      114 cells
+       19   LUT2
+       25   LUT3
+       70   LUT4
+
+=== dma_a ===
+
+        +----------Local Count, excluding submodules.
+        | 
+       65 wires
+      430 wire bits
+       65 public wires
+      430 public wire bits
+       42 ports
+      312 port bits
+        1 cells
+        1   LUT2
+        3 submodules
+        1   $paramod$41b6751ee50836ba3c18db89aa47baa96b3a761f\combined_hwc_channel_dma_agu
+        1   $paramod\dma_fetch_engine\MAP_SOURCE_METADATA=s32'00000000000000000000000000000000
+        1   dma_axil_control
+
+=== dma_axi_burst_planner ===
+
+        +----------Local Count, excluding submodules.
+        | 
+       27 wires
+      103 wire bits
+        6 public wires
+       82 public wire bits
+        4 ports
+       58 port bits
+       36 cells
+        1   LUT1
+        8   LUT2
+       11   LUT3
+       16   LUT4
+
+=== dma_axil_control ===
+
+        +----------Local Count, excluding submodules.
+        | 
+      275 wires
+      477 wire bits
+       37 public wires
+      239 public wire bits
+       28 ports
+      153 port bits
+      363 cells
+        1   LUT1
+       47   LUT2
+       45   LUT3
+      148   LUT4
+      122   LUTFF
+
+=== top_wrapper ===
+
+        +----------Local Count, excluding submodules.
+        | 
+       49 wires
+      377 wire bits
+       49 public wires
+      377 public wire bits
+       23 cells
+        1   AXIL_S_BEL
+        1   AXI_M_BEL
+        1   Global_Clock
+       20   IO_1_bidirectional_frame_config_pass
+        1 submodules
+        1   dma_a
+
+=== design hierarchy ===
+
+        +----------Count including submodules.
+        | 
+     1089 top_wrapper
+        1 dma_a
+      224   $paramod$41b6751ee50836ba3c18db89aa47baa96b3a761f\combined_hwc_channel_dma_agu
+      328   $paramod\dma_fetch_engine\MAP_SOURCE_METADATA=s32'00000000000000000000000000000000
+      114     $paramod\dma_map_datapath\MAP_SOURCE_METADATA=s32'00000000000000000000000000000000
+       36     dma_axi_burst_planner
+      363   dma_axil_control
+
+        +----------Count including submodules.
+        | 
+     1008 wires
+     2663 wire bits
+      291 public wires
+     1946 public wire bits
+      175 ports
+     1131 port bits
+        - memories
+        - memory bits
+        - processes
+     1089 cells
+        1   AXIL_S_BEL
+        1   AXI_M_BEL
+        1   Global_Clock
+       20   IO_1_bidirectional_frame_config_pass
+        4   LUT1
+      107   LUT2
+      198   LUT3
+      507   LUT4
+      250   LUTFF
+        1 submodules
+        1   dma_a

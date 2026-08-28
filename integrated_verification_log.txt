@@ -1,0 +1,101 @@
+make -f Test/combined_1x1_3x3_dma/Makefile.dma_combined model
+make -f Test/combined_1x1_3x3_dma/Makefile.dma_combined unit
+make -f Test/combined_1x1_3x3_dma/Makefile.dma_combined integrated
+Checking packed descriptors, direct 32-bit steering, and AXI read plan
+python3 /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Test/combined_1x1_3x3_dma/check_reference_schedules.py
+PASS: packed schedules and long-burst AXI plan match the reference model (16 activation cases, 40 weight cases, 312 row/slice descriptors, 4960 map groups, 9920 direct map beats, 280 zero fills, 304 bursts, 9360 32-bit beats)
+iverilog -g2012 -Wall -s tb_combined_dma \
+                -o /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Test/build/combined_1x1_3x3_dma/tb_combined_dma.vvp /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/combined_hwc_channel_dma_agu.sv /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/dma_axil_control.v /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/dma_axi_burst_planner.v /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/dma_map_datapath.v /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/dma_fetch_engine.v /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/dma_a.v /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/dma_npu_sram_adapter.sv /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Test/combined_1x1_3x3_dma/tb_combined_dma.sv
+/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/combined_hwc_channel_dma_agu.sv:121: sorry: constant selects in always_* processes are not fully supported (the process will be sensitive to all bits in 'row_q[4:0]').
+Running packed AXI burst and NPU SRAM ownership regression
+vvp /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Test/build/combined_1x1_3x3_dma/tb_combined_dma.vvp
+============================================================
+ PACKED 1x1 / 3x3 DIRECT-32 LONG-BURST DMA REGRESSION
+============================================================
+Checking immediate CPU-selected mode switching...
+Checking an activation row split at the AXI 4 KiB boundary...
+Checking writes while busy are rejected without corrupting the active command...
+Checking 3x3 kernel validation and 1x1 kernel-field ignore behavior...
+Checking all 3x3 activation configurations...
+Checking all 3x3 weight configurations...
+Checking all 1x1 activation configurations...
+Checking all 1x1 weight configurations...
+------------------------------------------------------------
+Operations checked       : 63
+Map commands checked     : 6144
+AXI read bursts checked  : 374
+AXI read beats checked   : 11588
+3x3 zero-fill commands   : 350
+Weight swaps checked     : 43
+Simulation cycles        : 19951
+PASS: packed DMA and ownership-qualified NPU SRAM adapter match all schedules
+/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Test/combined_1x1_3x3_dma/tb_combined_dma.sv:1144: $finish called at 199560000 (1ps)
+iverilog -g2012 -Wall \
+                -s tb_npu_yolo_combined_sequential_integrated \
+                -o /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Test/build/combined_1x1_3x3_dma/tb_npu_yolo_combined_sequential_integrated.vvp /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/combined_hwc_channel_dma_agu.sv /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/dma_axil_control.v /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/dma_axi_burst_planner.v /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/dma_map_datapath.v /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/dma_fetch_engine.v /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/dma_a.v /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/dma_npu_sram_adapter.sv /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/combined_dma_npu_sram_top.sv /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/npu/pe.sv /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/npu/systolic_array.sv /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/npu/npu_crossbar.sv /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/npu/npu_top.sv /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/npu/sram_bank.sv /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/npu/npu_sram_wrapper.sv \
+                /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Test/combined_1x1_3x3_dma/tb_npu_yolo_combined_sequential_integrated.sv
+/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/npu/pe.sv:1: warning: timescale for pe inherited from another file.
+/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/combined_dma_npu_sram_top.sv:1: ...: The inherited timescale is here.
+/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/npu/systolic_array.sv:1: warning: timescale for systolic_array inherited from another file.
+/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/combined_dma_npu_sram_top.sv:1: ...: The inherited timescale is here.
+/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/npu/npu_crossbar.sv:1: warning: timescale for npu_crossbar inherited from another file.
+/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/combined_dma_npu_sram_top.sv:1: ...: The inherited timescale is here.
+/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/npu/npu_top.sv:1: warning: timescale for npu_top inherited from another file.
+/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/combined_dma_npu_sram_top.sv:1: ...: The inherited timescale is here.
+/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/npu/sram_bank.sv:1: warning: timescale for sram_bank inherited from another file.
+/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/combined_dma_npu_sram_top.sv:1: ...: The inherited timescale is here.
+/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/npu/npu_sram_wrapper.sv:1: warning: timescale for npu_sram_wrapper inherited from another file.
+/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/combined_dma_npu_sram_top.sv:1: ...: The inherited timescale is here.
+/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/user_design/combined_1x1_3x3_dma/combined_hwc_channel_dma_agu.sv:121: sorry: constant selects in always_* processes are not fully supported (the process will be sensitive to all bits in 'row_q[4:0]').
+vvp /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Test/build/combined_1x1_3x3_dma/tb_npu_yolo_combined_sequential_integrated.vvp \
+                +CONV3_IMAGE_MEM=/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Test/conv_3x3/yolo_image_3x3.mem \
+                +CONV3_WEIGHTS_MEM=/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Test/conv_3x3/yolo_weights_3x3.mem \
+                +CONV3_GOLDEN_MEM=/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Test/conv_3x3/golden_conv3.mem \
+                +CONV1_IMAGE_MEM=/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Test/conv_1x1/yolo_conv1_in.mem \
+                +CONV1_WEIGHTS_MEM=/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Test/conv_1x1/yolo_conv1_w.mem \
+                +CONV1_GOLDEN_MEM=/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Test/conv_1x1/golden_conv1.mem
+Loading 3x3 image   : /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Test/conv_3x3/yolo_image_3x3.mem
+Loading 3x3 weights : /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Test/conv_3x3/yolo_weights_3x3.mem
+Loading 3x3 golden  : /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Test/conv_3x3/golden_conv3.mem
+Loading 1x1 image   : /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Test/conv_1x1/yolo_conv1_in.mem
+Loading 1x1 weights : /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Test/conv_1x1/yolo_conv1_w.mem
+Loading 1x1 golden  : /Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Test/conv_1x1/golden_conv1.mem
+===================================================================
+ PHASE 1: COMPLETE YOLO 3x3 LAYER ON SHARED DMA/NPU/SRAM
+===================================================================
+[500000] 3x3 tile ty=0 tx=0
+[1443751000] 3x3 tile ty=0 tx=1
+[2886951000] 3x3 tile ty=1 tx=0
+[4330151000] 3x3 tile ty=1 tx=1
+PHASE PASS: all 16,384 golden YOLO 3x3 outputs match
+===================================================================
+ LIVE TRANSITION: CPU WRITES AXI CONFIG BIT 9 FROM 0 TO 1
+ NO DMA, NPU, OR SRAM RESET IS ASSERTED
+===================================================================
+===================================================================
+ PHASE 2: COMPLETE YOLO 1x1 LAYER ON THE SAME LIVE INSTANCES
+===================================================================
+[5773400000] 1x1 tile ty=0 tx=0
+[6207851000] 1x1 tile ty=0 tx=1
+[6642251000] 1x1 tile ty=1 tx=0
+[7076651000] 1x1 tile ty=1 tx=1
+PHASE PASS: all 16,384 golden YOLO 1x1 outputs match
+-------------------------------------------------------------------
+DUT reset releases          : 1
+DMA mode transitions        : 1
+AXI-Lite writes, total      : 384
+DMA activation loads, total : 32
+DMA activation groups,total : 9280
+DMA zero-fill groups, total : 560
+DMA weight loads, total     : 160
+DMA weight groups, total    : 1280
+DMA weight bytes, total     : 10240
+DMA weight swaps, total     : 160
+AXI4 read bursts, total      : 688
+AXI4 read beats, total       : 20000
+NPU convolution passes,total: 160
+Golden outputs checked      : 32768
+Total simulation cycles     : 75106
+-------------------------------------------------------------------
+PASS: complete 3x3 then 1x1 workloads ran on one DMA/NPU/SRAM instance without reset
+/Users/jerryyun/Desktop/heidelberg_owas_dma/FABulous_demo_AXI_IO-main/Test/combined_1x1_3x3_dma/tb_npu_yolo_combined_sequential_integrated.sv:1793: $finish called at 7511051000 (1ps)
